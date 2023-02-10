@@ -27,10 +27,16 @@ contract Voting is Ownable {
         VotingSessionEnded,
         VotesTallied
     }
+    WorkflowStatus public voteStatus;
 
     uint256 winningProposalId;
 
+    bool private isAlreadySet = false;
+
     mapping (address => Voter) votersList;
+    mapping (uint256 => Proposal) proposalList;
+
+    uint256 [] proposalsIds;
 
     // --- EVENTS ---
 
@@ -42,7 +48,8 @@ contract Voting is Ownable {
     // --- CONSTRUCTOR ---
 
     constructor() {
-
+        // automatic register the owner
+        votersList[msg.sender].isRegistered = true;
     }
 
     // --- MODIFIERS ---
@@ -52,10 +59,78 @@ contract Voting is Ownable {
         _;
     }
 
+    modifier isGoodStep(WorkflowStatus stepNeeded) {
+        require(stepNeeded == voteStatus, unicode"Ce n'est pas la bonne étape pour cela");
+        _;
+    }
+
+    modifier hasNotVoted {
+        require(votersList[msg.sender].hasVoted == false, unicode"Vous avez déjà voté");
+        _;
+    }
+
+    modifier hasNotSetProposal {
+        require(votersList[msg.sender].votedProposalId == 0, unicode"Vous avez déjà emis une proposition");
+        _;
+
+    }
+
     // --- FUCTIONS ---
 
+    // register one adress to votersList mapping
     function resgisterVoter(address _addr) public onlyOwner {
         votersList[_addr].isRegistered = true;
         emit VoterRegistered(_addr);
+    }
+
+    // register a proposal id
+    function registerProposal(
+        uint256 _proposalId,
+        string calldata _description
+    )
+    public
+    isRegistered
+    hasNotSetProposal
+    isGoodStep(WorkflowStatus.ProposalsRegistrationStarted)
+    {
+        votersList[msg.sender].votedProposalId = _proposalId;
+        proposalList[_proposalId] = Proposal({description: _description, voteCount: 0});
+        for (uint256 i = 0; i < proposalsIds.length; i = i + 1) {
+            if (proposalsIds[i] == _proposalId) {
+                isAlreadySet = true;
+            }
+        }
+
+        if (isAlreadySet) {
+            isAlreadySet = false;
+        } else {
+            proposalsIds.push(_proposalId);
+        }
+    }
+
+    // set voteStatus to next step
+    function nextStep() public onlyOwner {
+        if (voteStatus == WorkflowStatus.RegisteringVoters) {
+            voteStatus = WorkflowStatus.ProposalsRegistrationStarted; // step 0 to 1
+        } else if (voteStatus == WorkflowStatus.ProposalsRegistrationStarted) {
+            voteStatus = WorkflowStatus.ProposalsRegistrationEnded; // step 1 to 2
+        } else if (voteStatus == WorkflowStatus.ProposalsRegistrationEnded) {
+            voteStatus = WorkflowStatus.VotingSessionStarted; // step 2 to 3
+        } else if (voteStatus == WorkflowStatus.VotingSessionStarted) {
+            voteStatus = WorkflowStatus.VotingSessionEnded; // step 3 to 4
+        } else if (voteStatus == WorkflowStatus.VotingSessionEnded) {
+            voteStatus = WorkflowStatus.VotesTallied; // step 4 to 5
+        }
+    }
+
+    // reset step
+    function resetVote() public onlyOwner {
+        voteStatus = WorkflowStatus.RegisteringVoters;
+        // TODO : reset the rest of the vote
+    }
+
+    // get proposal list id
+    function getProposalsId() public view returns(uint256[] memory) {
+        return proposalsIds;
     }
 }
