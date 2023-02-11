@@ -15,6 +15,7 @@ contract Voting is Ownable {
     }
 
     struct Proposal {
+        uint id;
         string description;
         uint voteCount;
     }
@@ -34,9 +35,9 @@ contract Voting is Ownable {
     bool private isAlreadySet = false;
 
     mapping (address => Voter) votersList;
-    mapping (uint256 => Proposal) proposalList;
+    // mapping (uint256 => Proposal) proposalList;
 
-    uint256 [] proposalsIds;
+    Proposal [] proposals;
 
     // --- EVENTS ---
 
@@ -93,19 +94,40 @@ contract Voting is Ownable {
     hasNotSetProposal
     isGoodStep(WorkflowStatus.ProposalsRegistrationStarted)
     {
-        votersList[msg.sender].votedProposalId = _proposalId;
-        proposalList[_proposalId] = Proposal({description: _description, voteCount: 0});
-        for (uint256 i = 0; i < proposalsIds.length; i = i + 1) {
-            if (proposalsIds[i] == _proposalId) {
+        for (uint256 i = 0; i < proposals.length; i = i + 1) {
+            if (proposals[i].id == _proposalId) {
                 isAlreadySet = true;
             }
         }
 
         if (isAlreadySet) {
             isAlreadySet = false;
+            revert(unicode"Une autre personne à déja proposé cela");
         } else {
-            proposalsIds.push(_proposalId);
+            votersList[msg.sender].votedProposalId = _proposalId;
+            proposals.push(Proposal({id: _proposalId, description: _description, voteCount: 0}));
+            // proposalList[_proposalId] = Proposal({description: _description, voteCount: 0});
+            //,proposalsIds.push(_proposalId);
         }
+    }
+
+    // register a vote
+    function registerVote(
+        uint256 _proposalId
+    )
+    public
+    isRegistered
+    hasNotVoted
+    isGoodStep(WorkflowStatus.VotingSessionStarted)
+    {
+        for (uint256 i = 0; i < proposals.length; i = i + 1) {
+            if (proposals[i].id == _proposalId) {
+                proposals[i].voteCount = proposals[i].voteCount + 1;
+                votersList[msg.sender].hasVoted = true;
+                return;
+            }
+        }
+        revert(unicode"Cette proposition n'existe pas");
     }
 
     // set voteStatus to next step
@@ -130,7 +152,7 @@ contract Voting is Ownable {
     }
 
     // get proposal list id
-    function getProposalsId() public view returns(uint256[] memory) {
-        return proposalsIds;
+    function getProposalsId() public view returns(Proposal[] memory) {
+        return proposals;
     }
 }
