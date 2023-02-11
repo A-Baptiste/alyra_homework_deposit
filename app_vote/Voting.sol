@@ -37,6 +37,9 @@ contract Voting is Ownable {
     mapping (address => Voter) votersList;
     // mapping (uint256 => Proposal) proposalList;
 
+    uint256 private higherVote = 0;
+    uint256 private higherVoteIndex = 0;
+
     Proposal [] proposals;
 
     // --- EVENTS ---
@@ -130,6 +133,44 @@ contract Voting is Ownable {
         revert(unicode"Cette proposition n'existe pas");
     }
 
+    // counting votes
+    function votesCounting()
+    public
+    onlyOwner
+    isGoodStep(WorkflowStatus.VotingSessionEnded)
+    {
+        for (uint256 i = 0; i < proposals.length; i = i + 1) {
+            if (proposals[i].voteCount > higherVote) {
+                higherVote = proposals[i].voteCount;
+                higherVoteIndex = i;
+            }
+        }
+
+        winningProposalId = higherVoteIndex;
+    }
+
+    // get winner
+    function getWinner()
+    public
+    view
+    isRegistered
+    isGoodStep(WorkflowStatus.VotesTallied)
+    returns (uint256)
+    {
+        return winningProposalId;
+    }
+
+    // get proposals
+    function getProposals()
+    public
+    view
+    isRegistered
+    isGoodStep(WorkflowStatus.VotesTallied)
+    returns (Proposal[] memory)
+    {
+        return proposals;
+    }
+
     // set voteStatus to next step
     function nextStep() public onlyOwner {
         if (voteStatus == WorkflowStatus.RegisteringVoters) {
@@ -149,10 +190,5 @@ contract Voting is Ownable {
     function resetVote() public onlyOwner {
         voteStatus = WorkflowStatus.RegisteringVoters;
         // TODO : reset the rest of the vote
-    }
-
-    // get proposal list id
-    function getProposalsId() public view returns(Proposal[] memory) {
-        return proposals;
     }
 }
