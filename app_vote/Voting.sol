@@ -52,6 +52,7 @@ contract Voting is Ownable {
     // --- CONSTRUCTOR ---
 
     constructor() {
+        voteStatus = WorkflowStatus.RegisteringVoters;
         // automatic register the owner
         votersList[msg.sender].isRegistered = true;
     }
@@ -76,7 +77,11 @@ contract Voting is Ownable {
     modifier hasNotSetProposal {
         require(votersList[msg.sender].votedProposalId == 0, unicode"Vous avez déjà emis une proposition");
         _;
+    }
 
+    modifier isNotStepFive {
+        require(voteStatus != WorkflowStatus.VotesTallied, unicode"Le processus de vote est terminé");
+        _;
     }
 
     // --- FUCTIONS ---
@@ -109,8 +114,7 @@ contract Voting is Ownable {
         } else {
             votersList[msg.sender].votedProposalId = _proposalId;
             proposals.push(Proposal({id: _proposalId, description: _description, voteCount: 0}));
-            // proposalList[_proposalId] = Proposal({description: _description, voteCount: 0});
-            //,proposalsIds.push(_proposalId);
+            emit ProposalRegistered(_proposalId);
         }
     }
 
@@ -127,6 +131,7 @@ contract Voting is Ownable {
             if (proposals[i].id == _proposalId) {
                 proposals[i].voteCount = proposals[i].voteCount + 1;
                 votersList[msg.sender].hasVoted = true;
+                emit Voted(msg.sender, _proposalId);
                 return;
             }
         }
@@ -172,18 +177,9 @@ contract Voting is Ownable {
     }
 
     // set voteStatus to next step
-    function nextStep() public onlyOwner {
-        if (voteStatus == WorkflowStatus.RegisteringVoters) {
-            voteStatus = WorkflowStatus.ProposalsRegistrationStarted; // step 0 to 1
-        } else if (voteStatus == WorkflowStatus.ProposalsRegistrationStarted) {
-            voteStatus = WorkflowStatus.ProposalsRegistrationEnded; // step 1 to 2
-        } else if (voteStatus == WorkflowStatus.ProposalsRegistrationEnded) {
-            voteStatus = WorkflowStatus.VotingSessionStarted; // step 2 to 3
-        } else if (voteStatus == WorkflowStatus.VotingSessionStarted) {
-            voteStatus = WorkflowStatus.VotingSessionEnded; // step 3 to 4
-        } else if (voteStatus == WorkflowStatus.VotingSessionEnded) {
-            voteStatus = WorkflowStatus.VotesTallied; // step 4 to 5
-        }
+    function nextStep() public isNotStepFive onlyOwner {
+        voteStatus = WorkflowStatus(uint256(voteStatus) + 1); // next step
+        emit WorkflowStatusChange(WorkflowStatus(uint256(voteStatus) - 1), voteStatus);
     }
 
     // reset step
