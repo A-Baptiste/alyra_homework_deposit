@@ -18,6 +18,7 @@ contract Voting is Ownable {
         uint id;
         string description;
         uint voteCount;
+        uint lastVoteTime;
     }
 
     enum WorkflowStatus {
@@ -30,17 +31,22 @@ contract Voting is Ownable {
     }
     WorkflowStatus public voteStatus;
 
+    enum EqualityRules {
+        first,
+        random
+    }
+    EqualityRules public equalityRule;
+
     uint256 winningProposalId;
+    uint256 private helper_currentWinner = 0;
+    uint256 private helper_currentWinnerIndex = 0;
 
     bool private isAlreadySet = false;
 
     mapping (address => Voter) votersList;
-    // mapping (uint256 => Proposal) proposalList;
-
-    uint256 private higherVote = 0;
-    uint256 private higherVoteIndex = 0;
 
     Proposal [] proposals;
+    uint256 [] equality;
 
     // --- EVENTS ---
 
@@ -53,6 +59,7 @@ contract Voting is Ownable {
 
     constructor() {
         voteStatus = WorkflowStatus.RegisteringVoters;
+        equalityRule = EqualityRules.first;
         // automatic register the owner
         votersList[msg.sender].isRegistered = true;
     }
@@ -92,7 +99,7 @@ contract Voting is Ownable {
         emit VoterRegistered(_addr);
     }
 
-    // register a proposal id
+    // register a proposal id, revert if proposal already exist
     function registerProposal(
         uint256 _proposalId,
         string calldata _description
@@ -113,12 +120,12 @@ contract Voting is Ownable {
             revert(unicode"Une autre personne à déja proposé cela");
         } else {
             votersList[msg.sender].votedProposalId = _proposalId;
-            proposals.push(Proposal({id: _proposalId, description: _description, voteCount: 0}));
+            proposals.push(Proposal({id: _proposalId, description: _description, lastVoteTime: 0, voteCount: 0}));
             emit ProposalRegistered(_proposalId);
         }
     }
 
-    // register a vote
+    // register a vote, revert if you vote for unexisting proposal
     function registerVote(
         uint256 _proposalId
     )
@@ -130,6 +137,7 @@ contract Voting is Ownable {
         for (uint256 i = 0; i < proposals.length; i = i + 1) {
             if (proposals[i].id == _proposalId) {
                 proposals[i].voteCount = proposals[i].voteCount + 1;
+                proposals[i].lastVoteTime = block.timestamp;
                 votersList[msg.sender].hasVoted = true;
                 emit Voted(msg.sender, _proposalId);
                 return;
@@ -138,23 +146,74 @@ contract Voting is Ownable {
         revert(unicode"Cette proposition n'existe pas");
     }
 
-    // counting votes
+    // counting votes return winner or call handleEquality in case of equality
     function votesCounting()
     public
     onlyOwner
     isGoodStep(WorkflowStatus.VotingSessionEnded)
     {
         for (uint256 i = 0; i < proposals.length; i = i + 1) {
-            if (proposals[i].voteCount > higherVote) {
-                higherVote = proposals[i].voteCount;
-                higherVoteIndex = i;
+            if (proposals[i].voteCount > helper_currentWinner) {
+                helper_currentWinner = proposals[i].voteCount;
+                helper_currentWinnerIndex = i;
+                delete equality;
+                continue;
+            }
+            if (proposals[i].voteCount == helper_currentWinner) {
+                equality.push(i);
             }
         }
 
-        winningProposalId = higherVoteIndex;
+        if (equality.length > 0) {
+            handleEquality();
+        } else {
+            winningProposalId = proposals[helper_currentWinnerIndex].id;
+        }
     }
 
-    // get winner
+    // handle the case of equality, redirect to good rule
+    function handleEquality() private {
+        equality.push(helper_currentWinnerIndex);
+
+        if (equalityRule == EqualityRules.first) {
+            handleEqualityFirst();
+        }
+        if (equalityRule == EqualityRules.random) {
+            handleEqualityRandom();
+        }
+    }
+
+    // set the winner for the first who get the amount of votes (in case of equality)
+    function handleEqualityFirst() private {
+        helper_currentWinner = proposals[0].lastVoteTime;
+        helper_currentWinnerIndex = 0;
+
+        for (uint256 i = 0; i < proposals.length; i = i + 1) {
+            if (proposals[i].lastVoteTime < helper_currentWinner) {
+                helper_currentWinner = proposals[i].lastVoteTime;
+                helper_currentWinnerIndex = i;
+            }
+        }
+
+        winningProposalId = proposals[helper_currentWinnerIndex].id;
+    }
+
+    // set the winner to a random (in case of equality)
+    function handleEqualityRandom() private {
+        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender))) % equality.length;
+        winningProposalId = proposals[equality[randomIndex]].id;
+    }
+
+    // toggle equality rules
+    function toggleEqualityRule() public onlyOwner {
+        if(equalityRule == EqualityRules.first) {
+            equalityRule = EqualityRules.random;
+            return;
+        }
+        equalityRule = EqualityRules.first;
+    }
+
+    // get winner, only on votes tailed
     function getWinner()
     public
     view
@@ -165,7 +224,7 @@ contract Voting is Ownable {
         return winningProposalId;
     }
 
-    // get proposals
+    // get proposals, only on votes tailled
     function getProposals()
     public
     view
@@ -182,9 +241,14 @@ contract Voting is Ownable {
         emit WorkflowStatusChange(WorkflowStatus(uint256(voteStatus) - 1), voteStatus);
     }
 
-    // reset step
+    // reset vote with same voters and equality rule
     function resetVote() public onlyOwner {
         voteStatus = WorkflowStatus.RegisteringVoters;
-        // TODO : reset the rest of the vote
+        winningProposalId = 0;
+        isAlreadySet = false;
+        helper_currentWinner = 0;
+        helper_currentWinnerIndex = 0;
+        delete proposals;
+        delete equality;
     }
 }
