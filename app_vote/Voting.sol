@@ -63,7 +63,7 @@ contract Voting is Ownable {
         voteStatus = WorkflowStatus.RegisteringVoters;
         equalityRule = EqualityRules.first;
         // automatic register the owner
-        votersList[msg.sender].isRegistered = true;
+        resgisterVoter(msg.sender);
     }
 
     // --- MODIFIERS ---
@@ -118,7 +118,7 @@ contract Voting is Ownable {
 
     // register a proposal id, revert if proposal already exist
     function registerProposal(uint256 _proposalId, string calldata _description)
-        public
+        external
         isRegistered
         hasNotSetProposal
         isGoodStep(WorkflowStatus.ProposalsRegistrationStarted)
@@ -148,7 +148,7 @@ contract Voting is Ownable {
 
     // register a vote, revert if you vote for unexisting proposal
     function registerVote(uint256 _proposalId)
-        public
+        external
         isRegistered
         hasNotVoted
         isGoodStep(WorkflowStatus.VotingSessionStarted)
@@ -167,7 +167,7 @@ contract Voting is Ownable {
 
     // counting votes return winner or call handleEquality in case of equality
     function votesCounting()
-        public
+        external
         onlyOwner
         isGoodStep(WorkflowStatus.VotingSessionEnded)
     {
@@ -226,7 +226,7 @@ contract Voting is Ownable {
     }
 
     // toggle equality rules
-    function toggleEqualityRule() public onlyOwner {
+    function toggleEqualityRule() external onlyOwner {
         if (equalityRule == EqualityRules.first) {
             equalityRule = EqualityRules.random;
             return;
@@ -236,7 +236,7 @@ contract Voting is Ownable {
 
     // get winner, only on votes tailed
     function getWinner()
-        public
+        external
         view
         isRegistered
         isGoodStep(WorkflowStatus.VotesTallied)
@@ -247,7 +247,7 @@ contract Voting is Ownable {
 
     // get proposals, only on votes tailled
     function getProposals()
-        public
+        external
         view
         isRegistered
         isGoodStep(WorkflowStatus.VotesTallied)
@@ -257,7 +257,7 @@ contract Voting is Ownable {
     }
 
     // set voteStatus to next step
-    function nextStep() public isNotStepFive onlyOwner {
+    function nextStep() external isNotStepFive onlyOwner {
         voteStatus = WorkflowStatus(uint256(voteStatus) + 1); // next step
         emit WorkflowStatusChange(
             WorkflowStatus(uint256(voteStatus) - 1),
@@ -266,7 +266,7 @@ contract Voting is Ownable {
     }
 
     // reset vote with same voters and equality rule
-    function resetVote() public onlyOwner {
+    function resetVote() external onlyOwner {
         voteStatus = WorkflowStatus.RegisteringVoters;
         winningProposalId = 0;
         isAlreadySet = false;
