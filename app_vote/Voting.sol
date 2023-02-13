@@ -5,7 +5,6 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Voting is Ownable {
-    
     // --- VARIABLES ---
 
     struct Voter {
@@ -15,10 +14,10 @@ contract Voting is Ownable {
     }
 
     struct Proposal {
-        uint id;
+        uint256 id;
         string description;
-        uint voteCount;
-        uint lastVoteTime;
+        uint256 voteCount;
+        uint256 lastVoteTime;
     }
 
     enum WorkflowStatus {
@@ -43,17 +42,20 @@ contract Voting is Ownable {
 
     bool private isAlreadySet = false;
 
-    mapping (address => Voter) votersList;
+    mapping(address => Voter) votersList;
 
-    Proposal [] proposals;
-    uint256 [] equality;
+    Proposal[] proposals;
+    uint256[] equality;
 
     // --- EVENTS ---
 
-    event VoterRegistered(address voterAddress); 
-    event WorkflowStatusChange(WorkflowStatus previousStatus, WorkflowStatus newStatus);
-    event ProposalRegistered(uint proposalId);
-    event Voted (address voter, uint proposalId);
+    event VoterRegistered(address voterAddress);
+    event WorkflowStatusChange(
+        WorkflowStatus previousStatus,
+        WorkflowStatus newStatus
+    );
+    event ProposalRegistered(uint256 proposalId);
+    event Voted(address voter, uint256 proposalId);
 
     // --- CONSTRUCTOR ---
 
@@ -66,28 +68,43 @@ contract Voting is Ownable {
 
     // --- MODIFIERS ---
 
-    modifier isRegistered {
-        require(votersList[msg.sender].isRegistered == true, unicode"Vous n'êtes pas whitelisté");
+    modifier isRegistered() {
+        require(
+            votersList[msg.sender].isRegistered == true,
+            unicode"Vous n'êtes pas whitelisté"
+        );
         _;
     }
 
     modifier isGoodStep(WorkflowStatus stepNeeded) {
-        require(stepNeeded == voteStatus, unicode"Ce n'est pas la bonne étape pour cela");
+        require(
+            stepNeeded == voteStatus,
+            unicode"Ce n'est pas la bonne étape pour cela"
+        );
         _;
     }
 
-    modifier hasNotVoted {
-        require(votersList[msg.sender].hasVoted == false, unicode"Vous avez déjà voté");
+    modifier hasNotVoted() {
+        require(
+            votersList[msg.sender].hasVoted == false,
+            unicode"Vous avez déjà voté"
+        );
         _;
     }
 
-    modifier hasNotSetProposal {
-        require(votersList[msg.sender].votedProposalId == 0, unicode"Vous avez déjà emis une proposition");
+    modifier hasNotSetProposal() {
+        require(
+            votersList[msg.sender].votedProposalId == 0,
+            unicode"Vous avez déjà emis une proposition"
+        );
         _;
     }
 
-    modifier isNotStepFive {
-        require(voteStatus != WorkflowStatus.VotesTallied, unicode"Le processus de vote est terminé");
+    modifier isNotStepFive() {
+        require(
+            voteStatus != WorkflowStatus.VotesTallied,
+            unicode"Le processus de vote est terminé"
+        );
         _;
     }
 
@@ -100,14 +117,11 @@ contract Voting is Ownable {
     }
 
     // register a proposal id, revert if proposal already exist
-    function registerProposal(
-        uint256 _proposalId,
-        string calldata _description
-    )
-    public
-    isRegistered
-    hasNotSetProposal
-    isGoodStep(WorkflowStatus.ProposalsRegistrationStarted)
+    function registerProposal(uint256 _proposalId, string calldata _description)
+        public
+        isRegistered
+        hasNotSetProposal
+        isGoodStep(WorkflowStatus.ProposalsRegistrationStarted)
     {
         for (uint256 i = 0; i < proposals.length; i = i + 1) {
             if (proposals[i].id == _proposalId) {
@@ -120,19 +134,24 @@ contract Voting is Ownable {
             revert(unicode"Une autre personne à déja proposé cela");
         } else {
             votersList[msg.sender].votedProposalId = _proposalId;
-            proposals.push(Proposal({id: _proposalId, description: _description, lastVoteTime: 0, voteCount: 0}));
+            proposals.push(
+                Proposal({
+                    id: _proposalId,
+                    description: _description,
+                    lastVoteTime: 0,
+                    voteCount: 0
+                })
+            );
             emit ProposalRegistered(_proposalId);
         }
     }
 
     // register a vote, revert if you vote for unexisting proposal
-    function registerVote(
-        uint256 _proposalId
-    )
-    public
-    isRegistered
-    hasNotVoted
-    isGoodStep(WorkflowStatus.VotingSessionStarted)
+    function registerVote(uint256 _proposalId)
+        public
+        isRegistered
+        hasNotVoted
+        isGoodStep(WorkflowStatus.VotingSessionStarted)
     {
         for (uint256 i = 0; i < proposals.length; i = i + 1) {
             if (proposals[i].id == _proposalId) {
@@ -148,9 +167,9 @@ contract Voting is Ownable {
 
     // counting votes return winner or call handleEquality in case of equality
     function votesCounting()
-    public
-    onlyOwner
-    isGoodStep(WorkflowStatus.VotingSessionEnded)
+        public
+        onlyOwner
+        isGoodStep(WorkflowStatus.VotingSessionEnded)
     {
         for (uint256 i = 0; i < proposals.length; i = i + 1) {
             if (proposals[i].voteCount > helper_currentWinner) {
@@ -185,28 +204,30 @@ contract Voting is Ownable {
 
     // set the winner for the first who get the amount of votes (in case of equality)
     function handleEqualityFirst() private {
-        helper_currentWinner = proposals[0].lastVoteTime;
+        helper_currentWinner = proposals[equality[0]].lastVoteTime;
         helper_currentWinnerIndex = 0;
 
-        for (uint256 i = 0; i < proposals.length; i = i + 1) {
-            if (proposals[i].lastVoteTime < helper_currentWinner) {
-                helper_currentWinner = proposals[i].lastVoteTime;
+        for (uint256 i = 0; i < equality.length; i = i + 1) {
+            if (proposals[equality[i]].lastVoteTime < helper_currentWinner) {
+                helper_currentWinner = proposals[equality[i]].lastVoteTime;
                 helper_currentWinnerIndex = i;
             }
         }
 
-        winningProposalId = proposals[helper_currentWinnerIndex].id;
+        winningProposalId = proposals[equality[helper_currentWinnerIndex]].id;
     }
 
     // set the winner to a random (in case of equality)
     function handleEqualityRandom() private {
-        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender))) % equality.length;
+        uint256 randomIndex = uint256(
+            keccak256(abi.encodePacked(block.timestamp, msg.sender))
+        ) % equality.length;
         winningProposalId = proposals[equality[randomIndex]].id;
     }
 
     // toggle equality rules
     function toggleEqualityRule() public onlyOwner {
-        if(equalityRule == EqualityRules.first) {
+        if (equalityRule == EqualityRules.first) {
             equalityRule = EqualityRules.random;
             return;
         }
@@ -215,22 +236,22 @@ contract Voting is Ownable {
 
     // get winner, only on votes tailed
     function getWinner()
-    public
-    view
-    isRegistered
-    isGoodStep(WorkflowStatus.VotesTallied)
-    returns (uint256)
+        public
+        view
+        isRegistered
+        isGoodStep(WorkflowStatus.VotesTallied)
+        returns (uint256)
     {
         return winningProposalId;
     }
 
     // get proposals, only on votes tailled
     function getProposals()
-    public
-    view
-    isRegistered
-    isGoodStep(WorkflowStatus.VotesTallied)
-    returns (Proposal[] memory)
+        public
+        view
+        isRegistered
+        isGoodStep(WorkflowStatus.VotesTallied)
+        returns (Proposal[] memory)
     {
         return proposals;
     }
@@ -238,7 +259,10 @@ contract Voting is Ownable {
     // set voteStatus to next step
     function nextStep() public isNotStepFive onlyOwner {
         voteStatus = WorkflowStatus(uint256(voteStatus) + 1); // next step
-        emit WorkflowStatusChange(WorkflowStatus(uint256(voteStatus) - 1), voteStatus);
+        emit WorkflowStatusChange(
+            WorkflowStatus(uint256(voteStatus) - 1),
+            voteStatus
+        );
     }
 
     // reset vote with same voters and equality rule
