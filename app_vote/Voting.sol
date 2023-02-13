@@ -36,16 +36,16 @@ contract Voting is Ownable {
     }
     EqualityRules public equalityRule;
 
-    uint256 winningProposalId;
+    uint256 public winningProposalId;
     uint256 private helper_currentWinner = 0;
     uint256 private helper_currentWinnerIndex = 0;
 
     bool private isAlreadySet = false;
 
-    mapping(address => Voter) votersList;
+    mapping(address => Voter) public votersList;
 
-    Proposal[] proposals;
-    uint256[] equality;
+    Proposal[] public proposals;
+    uint256[] private equality;
 
     // --- EVENTS ---
 
