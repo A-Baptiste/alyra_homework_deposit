@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@openzeppelin/contracts": "^4.8.1",
     "@openzeppelin/test-helpers": "^0.5.16",
     "eth-gas-reporter": "^0.2.25",
     "mocha": "^10.2.0"
