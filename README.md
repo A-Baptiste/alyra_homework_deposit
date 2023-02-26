@@ -12,7 +12,14 @@ Pas d'instalation specifique.
 ### Devoir 2 : Smart contract de vote avec tests
 ```📁 vote_with_tests```
 ###### Description :
-Le smart contract de vote corrigé mais avec les tests en et un environnement de dev en plus.
+Le smart contract de vote corrigé avec environnement Truffle.
+ Objectif: faire un fichier ```.test.js``` pour tester le smart contract de vote et executer les tests.
+ À été testé (dans l'ordre) :
+ - Les switch de workflow et leurs events
+ - Les getters et setters
+ - Le comptage des votes
+ - Les events
+ - Les reverts et le require
 ###### Utilisation :
 Avoir Ganache et Truffle
 Avoir Node et Npm à jour
