@@ -12,8 +12,8 @@ Pas d'instalation specifique.
 ### Devoir 2 : Smart contract de vote avec tests
 ```📁 vote_with_tests```
 ###### Description :
-Le smart contract de vote corrigé avec environnement Truffle.
- Objectif: faire un fichier ```.test.js``` pour tester le smart contract de vote et executer les tests.
+Le smart contract de vote corrigé avec environnement Truffle. \
+ Objectif: faire un fichier ```.test.js``` pour tester le smart contract de vote et executer les tests. \
  À été testé (dans l'ordre) :
  - Les switch de workflow et leurs events
  - Les getters et setters
