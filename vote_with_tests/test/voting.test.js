@@ -9,7 +9,7 @@ contract("Voting", accounts => {
   const third = accounts[2];
   const fourth = accounts[3];
 
-  let vi; // "vi" alias VotingInstance
+  let vi; // "vi" means VotingInstance
 
   describe("Test workflow changes and events", function () {
 
@@ -24,105 +24,142 @@ contract("Voting", accounts => {
     it("Should switch to ProposalsRegistrationStarted and emit good event", async () => {
       const event = await vi.startProposalsRegistering({ from: owner });
       expectEvent(event, "WorkflowStatusChange", { previousStatus: new BN(0), newStatus: new BN(1) });
+    });
+
+    it("Should be ProposalsRegistrationStarted", async () => {
       expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(1));
     });
 
     it("Should switch to ProposalsRegistrationEnded and emit good event", async () => {
       const event = await vi.endProposalsRegistering({ from: owner });
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(2));
       expectEvent(event, "WorkflowStatusChange", { previousStatus: new BN(1), newStatus: new BN(2) });
+    });
+
+    it("Should be ProposalsRegistrationEnded", async () => {
+      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(2));
     });
 
     it("Should switch to VotingSessionStarted and emit good event", async () => {
       const event = await vi.startVotingSession({ from: owner });
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(3));
       expectEvent(event, "WorkflowStatusChange", { previousStatus: new BN(2), newStatus: new BN(3) });
+    });
+
+    it("Should be VotingSessionStarted", async () => {
+      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(3));
     });
 
     it("Should switch to VotingSessionEnded and emit good event", async () => {
       const event = await vi.endVotingSession({ from: owner });
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(4));
       expectEvent(event, "WorkflowStatusChange", { previousStatus: new BN(3), newStatus: new BN(4) });
+    });
+
+    it("Should be VotingSessionEnded", async () => {
+      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(4));
     });
 
     it("Should switch to VotesTallied and emit good event", async () => {
       const event = await vi.tallyVotes({ from: owner });
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(5));
       expectEvent(event, "WorkflowStatusChange", { previousStatus: new BN(4), newStatus: new BN(5) });
+    });
+
+    it("Should be VotesTallied", async () => {
+      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(5));
     });
   });
 
   describe("Test all setters and getters", function () {
 
-    beforeEach(async function () {
+    before(async function () {
       vi = await Voting.new({from:owner});
+
       await vi.addVoter(owner, { from: owner });
-    });
-
-    it("Should set & get voter owner", async () => {
-      const ownerVoter = await vi.getVoter(owner);
-      expect(ownerVoter.isRegistered).to.equal(true);
-    });
-
-    it("Should set & get voter second", async () => {
       await vi.addVoter(second, { from: owner });
-      const secondVoter = await vi.getVoter(second);
-      expect(secondVoter.isRegistered).to.equal(true);
     });
 
-    it("Should not set & get voter third", async () => {
-      const thirdVoter = await vi.getVoter(third);
-      expect(thirdVoter.isRegistered).to.equal(false);
+    describe("addVoter() / getVoter()", function () {
+
+      it("Should set & get voter owner", async () => {
+        const ownerVoter = await vi.getVoter(owner);
+        expect(ownerVoter.isRegistered).to.be.true;
+      });
+
+      it("Should set & get voter second", async () => {
+        const secondVoter = await vi.getVoter(second);
+        expect(secondVoter.isRegistered).to.be.true;
+      });
+
+      it("Should not set & get voter third", async () => {
+        const thirdVoter = await vi.getVoter(third);
+        expect(thirdVoter.isRegistered).to.be.false;
+      });
     });
 
-    it("Should set & get a proposal", async () => {
-      await vi.startProposalsRegistering({ from: owner });
-      await vi.addProposal("lorem", { from: owner });
-      const proposal = await vi.getOneProposal(1);
-      expect(proposal.description).to.equal("lorem");
+    describe("addProposal() / getOneProposal()", function () {
+
+      before(async function () {
+        await vi.addVoter(third, { from: owner });
+        await vi.startProposalsRegistering({ from: owner });
+
+        await vi.addProposal("lorem", { from: owner });
+        await vi.addProposal("ipsum", { from: owner });
+        await vi.addProposal("dolor", { from: owner });
+      });
+
+      it("Should set & get a proposal", async () => {
+        const proposal = await vi.getOneProposal(1);
+        expect(proposal.description).to.equal("lorem");
+      });
+  
+      it("Should set & get multiple proposals", async () => {
+        const proposal_1 = await vi.getOneProposal(1);
+        const proposal_2 = await vi.getOneProposal(2);
+        const proposal_3 = await vi.getOneProposal(3);
+        expect(proposal_1.description).to.equal("lorem");
+        expect(proposal_2.description).to.equal("ipsum");
+        expect(proposal_3.description).to.equal("dolor");
+      });
     });
 
-    it("Should set & get multiple proposals", async () => {
-      await vi.startProposalsRegistering({ from: owner });
-      await vi.addProposal("lorem", { from: owner });
-      await vi.addProposal("ipsum", { from: owner });
-      await vi.addProposal("sit", { from: owner });
-      const proposal_1 = await vi.getOneProposal(1);
-      const proposal_2 = await vi.getOneProposal(2);
-      const proposal_3 = await vi.getOneProposal(3);
-      expect(proposal_1.description).to.equal("lorem");
-      expect(proposal_2.description).to.equal("ipsum");
-      expect(proposal_3.description).to.equal("sit");
-    });
+    describe("setVote()", function () {
 
-    it("Should set & get a vote", async () => {
-      await vi.addVoter(second, { from: owner });
-      await vi.addVoter(third, { from: owner });
+      before(async function () {
+        await vi.endProposalsRegistering({ from: owner });
+        await vi.startVotingSession({ from: owner });
+        await vi.setVote(1, { from: owner });
+        await vi.setVote(1, { from: second });
+      });
 
-      await vi.startProposalsRegistering({ from: owner });
-      await vi.addProposal("lorem", { from: owner });
-      await vi.endProposalsRegistering({ from: owner });
-      await vi.startVotingSession({ from: owner });
-      await vi.setVote(1, { from: owner });
-      await vi.setVote(1, { from: second });
+      it("Should proposal 'lorem' exist", async () => {
+        const proposal = await vi.getOneProposal(1);
+        expect(proposal.description).to.equal("lorem");
+      });
 
-      const proposal = await vi.getOneProposal(1);
-      const ownerVoter = await vi.getVoter(owner);
-      const secondVoter = await vi.getVoter(second);
-      const thirdVoter = await vi.getVoter(third);
+      it("Should proposal 'lorem' have 2 votes", async () => {
+        const proposal = await vi.getOneProposal(1);
+        expect(proposal.voteCount).to.be.bignumber.equal(new BN(2));
+      });
 
-      expect(proposal.description).to.equal("lorem");
-      expect(proposal.voteCount).to.be.bignumber.equal(new BN(2));
-      expect(ownerVoter.hasVoted).to.be.true;
-      expect(ownerVoter.votedProposalId).to.be.bignumber.equal(new BN(1));
-      expect(secondVoter.hasVoted).to.be.true;
-      expect(secondVoter.votedProposalId).to.be.bignumber.equal(new BN(1));
-      expect(thirdVoter.hasVoted).to.be.false;
-      expect(thirdVoter.votedProposalId).to.be.bignumber.equal(new BN(0));
+      it("Should owner has voted and vote for proposal 1", async () => {
+        const ownerVoter = await vi.getVoter(owner);
+        expect(ownerVoter.hasVoted).to.be.true;
+        expect(ownerVoter.votedProposalId).to.be.bignumber.equal(new BN(1));
+      });
+
+      it("Should second has voted and vote for proposal 1", async () => {
+        const secondVoter = await vi.getVoter(second);
+        expect(secondVoter.hasVoted).to.be.true;
+        expect(secondVoter.votedProposalId).to.be.bignumber.equal(new BN(1));
+      });
+
+      it("Should third has not voted", async () => {
+        const thirdVoter = await vi.getVoter(third);
+        expect(thirdVoter.hasVoted).to.be.false;
+        expect(thirdVoter.votedProposalId).to.be.bignumber.equal(new BN(0));
+      });
     });
   });
 
-  describe("Test vote counting", function () {
+  describe("Test of votes counting : tallyVotes()", function () {
 
     beforeEach(async function () {
       vi = await Voting.new({ from:owner });
