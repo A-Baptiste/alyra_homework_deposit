@@ -10,6 +10,11 @@ contract("Voting", accounts => {
 
   let vi; // "vi" means VotingInstance
 
+  /*
+    WORKFLOW CHANGES
+    Test the 6 workflow changes
+    Test for each changes the associated event
+  */
   describe("Test workflow changes and events", function () {
 
     before(async function () {
@@ -66,6 +71,13 @@ contract("Voting", accounts => {
     });
   });
 
+  /*
+    SETTERS / GETTERS
+    Test setters and getters
+    1 : Test the registration of voters
+    2 : Test if the proposals are set and visible
+    3 : Test if all voters has they votes set in good places and visible
+  */
   describe("Test all setters and getters", function () {
 
     before(async function () {
@@ -164,6 +176,11 @@ contract("Voting", accounts => {
     });
   });
 
+  /*
+    VOTE COUNTING
+    Test the votes counting logic
+    Test if votes are correctly counted in case of unanimity, majority or equality
+  */
   describe("Test of votes counting : tallyVotes()", function () {
 
     beforeEach(async function () {
@@ -242,6 +259,13 @@ contract("Voting", accounts => {
     });
   });
 
+  /*
+    EVENTS
+    Test if the good event with the good param are emitted when :
+    register voter
+    set proposal
+    add vote
+  */
   describe("Test events emits", function () {
 
     before(async function () {
@@ -267,6 +291,10 @@ contract("Voting", accounts => {
     });
   });
 
+  /*
+    REVERTS AND REQUIRE
+    Test if all the function revert in the good case with the good message
+  */
   describe("Test all reverts an the require", function () {
 
     before(async function () {
