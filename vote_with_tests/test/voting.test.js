@@ -13,11 +13,11 @@ contract("Voting", accounts => {
   describe("Test workflow changes and events", function () {
 
     before(async function () {
-      vi = await Voting.deployed({ from:owner });
+      vi = await Voting.new({ from:owner });
     });
 
     it("Should be RegisteringVoters by default", async () => {
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(0));
+      expect(await vi.workflowStatus.call({ from:owner })).to.be.bignumber.equal(new BN(0));
     });
 
     it("Should switch to ProposalsRegistrationStarted and emit good event", async () => {
@@ -26,7 +26,7 @@ contract("Voting", accounts => {
     });
 
     it("Should be ProposalsRegistrationStarted", async () => {
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(1));
+      expect(await vi.workflowStatus.call({ from:owner })).to.be.bignumber.equal(new BN(1));
     });
 
     it("Should switch to ProposalsRegistrationEnded and emit good event", async () => {
@@ -35,7 +35,7 @@ contract("Voting", accounts => {
     });
 
     it("Should be ProposalsRegistrationEnded", async () => {
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(2));
+      expect(await vi.workflowStatus.call({ from:owner })).to.be.bignumber.equal(new BN(2));
     });
 
     it("Should switch to VotingSessionStarted and emit good event", async () => {
@@ -44,7 +44,7 @@ contract("Voting", accounts => {
     });
 
     it("Should be VotingSessionStarted", async () => {
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(3));
+      expect(await vi.workflowStatus.call({ from:owner })).to.be.bignumber.equal(new BN(3));
     });
 
     it("Should switch to VotingSessionEnded and emit good event", async () => {
@@ -53,7 +53,7 @@ contract("Voting", accounts => {
     });
 
     it("Should be VotingSessionEnded", async () => {
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(4));
+      expect(await vi.workflowStatus.call({ from:owner })).to.be.bignumber.equal(new BN(4));
     });
 
     it("Should switch to VotesTallied and emit good event", async () => {
@@ -62,7 +62,7 @@ contract("Voting", accounts => {
     });
 
     it("Should be VotesTallied", async () => {
-      expect(await vi.workflowStatus()).to.be.bignumber.equal(new BN(5));
+      expect(await vi.workflowStatus.call({ from:owner })).to.be.bignumber.equal(new BN(5));
     });
   });
 
@@ -78,17 +78,17 @@ contract("Voting", accounts => {
     describe("addVoter() / getVoter()", function () {
 
       it("Should set & get voter owner", async () => {
-        const ownerVoter = await vi.getVoter(owner, { from: owner});
+        const ownerVoter = await vi.getVoter.call(owner, { from: owner});
         expect(ownerVoter.isRegistered).to.be.true;
       });
 
       it("Should set & get voter second", async () => {
-        const secondVoter = await vi.getVoter(second , { from: second});
+        const secondVoter = await vi.getVoter.call(second , { from: second});
         expect(secondVoter.isRegistered).to.be.true;
       });
 
       it("Should not set & get voter third", async () => {
-        const thirdVoter = await vi.getVoter(third, { from: owner});
+        const thirdVoter = await vi.getVoter.call(third, { from: owner});
         expect(thirdVoter.isRegistered).to.be.false;
       });
     });
@@ -105,22 +105,22 @@ contract("Voting", accounts => {
       });
 
       it("Should get proposal owner -> owner", async () => {
-        const proposal = await vi.getOneProposal(1, { from: owner });
+        const proposal = await vi.getOneProposal.call(1, { from: owner });
         expect(proposal.description).to.equal("lorem");
       });
 
       it("Should get proposal second -> owner", async () => {
-        const proposal = await vi.getOneProposal(1, { from: second });
+        const proposal = await vi.getOneProposal.call(1, { from: second });
         expect(proposal.description).to.equal("lorem");
       });
 
       it("Should get proposal third -> second", async () => {
-        const proposal = await vi.getOneProposal(2, { from: third });
+        const proposal = await vi.getOneProposal.call(2, { from: third });
         expect(proposal.description).to.equal("ipsum");
       });
 
       it("Should get proposal third -> third", async () => {
-        const proposal = await vi.getOneProposal(3, { from: third });
+        const proposal = await vi.getOneProposal.call(3, { from: third });
         expect(proposal.description).to.equal("dolor");
       });
     });
@@ -135,29 +135,29 @@ contract("Voting", accounts => {
       });
 
       it("Should proposal 'lorem' exist", async () => {
-        const proposal = await vi.getOneProposal(1);
+        const proposal = await vi.getOneProposal.call(1);
         expect(proposal.description).to.equal("lorem");
       });
 
       it("Should proposal 'lorem' have 2 votes", async () => {
-        const proposal = await vi.getOneProposal(1);
+        const proposal = await vi.getOneProposal.call(1);
         expect(proposal.voteCount).to.be.bignumber.equal(new BN(2));
       });
 
       it("Should owner has voted and vote for proposal 1", async () => {
-        const ownerVoter = await vi.getVoter(owner);
+        const ownerVoter = await vi.getVoter.call(owner);
         expect(ownerVoter.hasVoted).to.be.true;
         expect(ownerVoter.votedProposalId).to.be.bignumber.equal(new BN(1));
       });
 
       it("Should second has voted and vote for proposal 1", async () => {
-        const secondVoter = await vi.getVoter(second);
+        const secondVoter = await vi.getVoter.call(second);
         expect(secondVoter.hasVoted).to.be.true;
         expect(secondVoter.votedProposalId).to.be.bignumber.equal(new BN(1));
       });
 
       it("Should third has not voted", async () => {
-        const thirdVoter = await vi.getVoter(third);
+        const thirdVoter = await vi.getVoter.call(third);
         expect(thirdVoter.hasVoted).to.be.false;
         expect(thirdVoter.votedProposalId).to.be.bignumber.equal(new BN(0));
       });
@@ -190,7 +190,7 @@ contract("Voting", accounts => {
       await vi.endVotingSession({ from: owner });
       await vi.tallyVotes({ from: owner });
 
-      expect(await vi.winningProposalID()).to.be.bignumber.equal(new BN(1));
+      expect(await vi.winningProposalID.call()).to.be.bignumber.equal(new BN(1));
     });
 
     it("Should 'lorem' win majority", async () => {
@@ -202,7 +202,7 @@ contract("Voting", accounts => {
       await vi.endVotingSession({ from: owner });
       await vi.tallyVotes({ from: owner });
 
-      expect(await vi.winningProposalID()).to.be.bignumber.equal(new BN(1));
+      expect(await vi.winningProposalID.call()).to.be.bignumber.equal(new BN(1));
     });
 
     it("Should 'ipsum' win unanimity", async () => {
@@ -214,7 +214,7 @@ contract("Voting", accounts => {
       await vi.endVotingSession({ from: owner });
       await vi.tallyVotes({ from: owner });
 
-      expect(await vi.winningProposalID()).to.be.bignumber.equal(new BN(2));
+      expect(await vi.winningProposalID.call()).to.be.bignumber.equal(new BN(2));
     });
 
     it("Should 'ipsum' win majority", async () => {
@@ -226,10 +226,10 @@ contract("Voting", accounts => {
       await vi.endVotingSession({ from: owner });
       await vi.tallyVotes({ from: owner });
 
-      expect(await vi.winningProposalID()).to.be.bignumber.equal(new BN(2));
+      expect(await vi.winningProposalID.call()).to.be.bignumber.equal(new BN(2));
     });
 
-    it("Should 'lorem' win (first in proposals array)", async () => {
+    it("Should 'lorem' win equality (first in proposals array)", async () => {
       await vi.setVote(2, { from: owner });
       await vi.setVote(2, { from: second });
       await vi.setVote(1, { from: third });
@@ -238,7 +238,7 @@ contract("Voting", accounts => {
       await vi.endVotingSession({ from: owner });
       await vi.tallyVotes({ from: owner });
 
-      expect(await vi.winningProposalID()).to.be.bignumber.equal(new BN(1));
+      expect(await vi.winningProposalID.call()).to.be.bignumber.equal(new BN(1));
     });
   });
 
@@ -276,34 +276,34 @@ contract("Voting", accounts => {
     describe("addVoter()", function () {
 
       it("Should not add voter if not owner", async () => {
-        await expectRevert(vi.addVoter(owner, { from: second }), 'Ownable: caller is not the owner');
+        await expectRevert(vi.addVoter.call(owner, { from: second }), 'Ownable: caller is not the owner');
       });
 
       it("Should not add voter already registered", async () => {
         await vi.addVoter(owner, { from: owner });
-        await expectRevert(vi.addVoter(owner, { from: owner }), 'Already registered');
+        await expectRevert(vi.addVoter.call(owner, { from: owner }), 'Already registered');
       });
 
       it("Should not add voter if wrong step", async () => {
         await vi.startProposalsRegistering({ from: owner });
-        await expectRevert(vi.addVoter(owner, { from: owner }), 'Voters registration is not open yet');
+        await expectRevert(vi.addVoter.call(owner, { from: owner }), 'Voters registration is not open yet');
       });
     });
 
     describe("addProposal()", function () {
 
       it("Should not add proposal if not voter", async () => {
-        await expectRevert(vi.addProposal("lorem", { from: second }), "You're not a voter");
+        await expectRevert(vi.addProposal.call("lorem", { from: second }), "You're not a voter");
       });
 
       it("Should not add proposal if not description", async () => {
-        await expectRevert(vi.addProposal("", { from: owner }), 'Vous ne pouvez pas ne rien proposer');
+        await expectRevert(vi.addProposal.call("", { from: owner }), 'Vous ne pouvez pas ne rien proposer');
         await vi.addProposal("lorem", { from: owner });
       });
 
       it("Should not add proposal if wrong step", async () => {
         await vi.endProposalsRegistering( { from: owner });
-        await expectRevert(vi.addProposal("lorem", { from: owner }), 'Proposals are not allowed yet');
+        await expectRevert(vi.addProposal.call("lorem", { from: owner }), 'Proposals are not allowed yet');
       });
     });
 
@@ -311,65 +311,65 @@ contract("Voting", accounts => {
 
       it("Should not vote if not voter", async () => {
         await vi.startVotingSession( { from: owner });
-        await expectRevert(vi.setVote(1, { from: second }), "You're not a voter");
+        await expectRevert(vi.setVote.call(1, { from: second }), "You're not a voter");
       });
 
       it("Should not vote if proposal not exist", async () => {
-        await expectRevert(vi.setVote(999, { from: owner }), 'Proposal not found');
+        await expectRevert(vi.setVote.call(999, { from: owner }), 'Proposal not found');
       });
 
       it("Should not vote if already voted", async () => {
         await vi.setVote(1, { from: owner });
-        await expectRevert(vi.setVote(1, { from: owner }), 'You have already voted');
+        await expectRevert(vi.setVote.call(1, { from: owner }), 'You have already voted');
       });
 
       it("Should not vote if wrong step", async () => {
         await vi.endVotingSession( { from: owner });
-        await expectRevert(vi.setVote(1, { from: owner }), 'Voting session havent started yet');
+        await expectRevert(vi.setVote.call(1, { from: owner }), 'Voting session havent started yet');
       });
     });
 
     describe("Workflow changes functions", function () {
 
       it("Should not switch to 'RegisteringVoters' if not owner", async () => {
-        await expectRevert(vi.startProposalsRegistering( { from: second }), 'Ownable: caller is not the owner');
+        await expectRevert(vi.startProposalsRegistering.call( { from: second }), 'Ownable: caller is not the owner');
       });
 
       it("Should not switch to 'RegisteringVoters' if wrong step", async () => {
-        await expectRevert(vi.startProposalsRegistering( { from: owner }), 'Registering proposals cant be started now');
+        await expectRevert(vi.startProposalsRegistering.call( { from: owner }), 'Registering proposals cant be started now');
       });
 
       it("Should not switch to 'ProposalsRegistrationEnded' if not owner", async () => {
-        await expectRevert(vi.endProposalsRegistering( { from: second }), 'Ownable: caller is not the owner');
+        await expectRevert(vi.endProposalsRegistering.call( { from: second }), 'Ownable: caller is not the owner');
       });
 
       it("Should not switch to 'ProposalsRegistrationEnded' if wrong step", async () => {
-        await expectRevert(vi.endProposalsRegistering( { from: owner }), 'Registering proposals havent started yet');
+        await expectRevert(vi.endProposalsRegistering.call( { from: owner }), 'Registering proposals havent started yet');
       });
 
       it("Should not switch to 'VotingSessionStarted' if not owner", async () => {
-        await expectRevert(vi.startVotingSession( { from: second }), 'Ownable: caller is not the owner');
+        await expectRevert(vi.startVotingSession.call( { from: second }), 'Ownable: caller is not the owner');
       });
 
       it("Should not switch to 'VotingSessionStarted' if wrong step", async () => {
-        await expectRevert(vi.startVotingSession( { from: owner }), 'Registering proposals phase is not finished');
+        await expectRevert(vi.startVotingSession.call( { from: owner }), 'Registering proposals phase is not finished');
       });
 
       it("Should not switch to 'VotingSessionEnded' if not owner", async () => {
-        await expectRevert(vi.endVotingSession( { from: second }), 'Ownable: caller is not the owner');
+        await expectRevert(vi.endVotingSession.call( { from: second }), 'Ownable: caller is not the owner');
       });
 
       it("Should not switch to 'VotingSessionEnded' if wrong step", async () => {
-        await expectRevert(vi.endVotingSession( { from: owner }), 'Voting session havent started yet');
+        await expectRevert(vi.endVotingSession.call( { from: owner }), 'Voting session havent started yet');
       });
 
       it("Should not switch to 'VotesTallied' if not owner", async () => {
-        await expectRevert(vi.tallyVotes( { from: second }), 'Ownable: caller is not the owner');
+        await expectRevert(vi.tallyVotes.call( { from: second }), 'Ownable: caller is not the owner');
       });
 
       it("Should not switch to 'VotesTallied' if wrong step", async () => {
         await vi.tallyVotes( { from: owner });
-        await expectRevert(vi.tallyVotes( { from: owner }), "Current status is not voting session ended");
+        await expectRevert(vi.tallyVotes.call( { from: owner }), "Current status is not voting session ended");
       });
     });
   });
