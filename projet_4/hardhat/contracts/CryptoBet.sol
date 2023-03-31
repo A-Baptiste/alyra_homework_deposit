@@ -11,14 +11,20 @@ contract CryptoBet is Ownable {
       uint256 bet_value;
       uint256 balance;
       Expectations expectStatus;
-      bool isWinner;
-      bool isBetting;
+      BetStatus betStatus;
   }
 
   enum Expectations {
     noting,
     down,
     up
+  }
+
+  enum BetStatus {
+    noBet,
+    pending,
+    loose,
+    win
   }
 
   mapping(address => UserBet) userBets;
@@ -46,21 +52,38 @@ contract CryptoBet is Ownable {
 
   modifier mustNotBeBetting() {
       require(
-          userBets[msg.sender].isBetting == false,
+          userBets[msg.sender].betStatus == BetStatus(uint256(0)),
           unicode"must not betting to execute this function"
       );
       _;
   }
 
-  modifier mustBeBetting() {
+  modifier mustSendRightValue() {
       require(
-          userBets[msg.sender].isBetting == true,
-          unicode"must be betting to execute this function"
+          msg.value == betValue,
+          unicode"you must send exactly the bet value"
+      );
+      _;
+  }
+
+  modifier mustBetEnded() {
+      require(
+          userBets[msg.sender].betStatus == BetStatus(uint256(2)) ||
+          userBets[msg.sender].betStatus == BetStatus(uint256(3)),
+          unicode"wait till your bet has finished"
       );
       _;
   }
 
   // --- FUCTIONS ---
+
+  function getBetters() public view returns(address[] memory) {
+    return betters;
+  }
+
+  function getOnebetter(address _addr) public view returns(UserBet memory) {
+      return userBets[_addr];
+  }
 
   function nextRound() external onlyOwner {
     int256 newPriceFeed = getLatestPrice();
@@ -70,13 +93,15 @@ contract CryptoBet is Ownable {
     // update price feed
     currentPriceFeed = newPriceFeed;
    
+    // compute winners 
     for (uint256 i = 0; i < betters.length; i = i + 1) {
       if (userBets[betters[i]].expectStatus == answerStatus) {
-        userBets[betters[i]].isWinner == true;
+        userBets[betters[i]].betStatus = BetStatus(uint256(3));
         winners = winners + 1;
         // EVT -> you win
       } else {
-        resetUserBet(betters[i]);
+        userBets[betters[i]].betStatus = BetStatus(uint256(2));
+        // resetUserBet(betters[i]);
         // EVT -> you loose
       }
     }
@@ -95,25 +120,26 @@ contract CryptoBet is Ownable {
 
   function computeRewards(uint256 win) private {
     for (uint256 i = 0; i < betters.length; i = i + 1) {
-      if (userBets[betters[i]].isWinner == true) {
+      if (userBets[betters[i]].betStatus == BetStatus(uint256(3))) {
         userBets[betters[i]].balance = win / currentBetBalance;
       }
     }
   }
 
   // register a bet
-  function registerBet(uint256 _expectation) external payable mustNotBeBetting {
+  function registerBet(uint256 _expectation) external payable mustNotBeBetting mustSendRightValue {
     betters.push(msg.sender);
     userBets[msg.sender].bet_value = betValue;
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
-    userBets[msg.sender].isBetting = true;
+    userBets[msg.sender].betStatus = BetStatus(uint256(1));
     currentBetBalance = currentBetBalance + betValue;
-    // EVT -> nex bet
+    // EVT -> new bet
   }
 
   // claim a bet
-  function claimBet() external mustBeBetting {
-    if (userBets[msg.sender].isWinner == true) {
+  function claimBet() external mustBetEnded{
+    // TODO get marge
+    if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
       (bool success, ) = msg.sender.call{value: userBets[msg.sender].bet_value}("");
       require (success, unicode"Echec du transfer de la recompense veuillez réessayer");
     }
@@ -124,8 +150,7 @@ contract CryptoBet is Ownable {
     delete userBets[_userToRemove].bet_value;
     delete userBets[_userToRemove].expectStatus;
     delete userBets[_userToRemove].balance;
-    delete userBets[_userToRemove].isBetting;
-    delete userBets[_userToRemove].isWinner;
+    delete userBets[msg.sender].betStatus;
   }
 
   // get latest price
@@ -139,4 +164,7 @@ contract CryptoBet is Ownable {
   ) = priceFeed.latestRoundData();
       return price;
   }
+
+  receive() external payable {}
+  fallback() external payable {}
 }
