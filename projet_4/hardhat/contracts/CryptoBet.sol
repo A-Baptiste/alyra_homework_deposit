@@ -11,7 +11,7 @@ contract CryptoBet is Ownable {
       uint256 bet_value;
       uint256 balance;
       Expectations expectStatus;
-      Results betStatus;
+      bool isWinner;
       bool isBetting;
   }
 
@@ -21,19 +21,13 @@ contract CryptoBet is Ownable {
     up
   }
 
-  enum Results {
-    noting,
-    loose,
-    win
-  }
-
   mapping(address => UserBet) userBets;
 
   address[] betters;
-  uint256 currentBetBalance;
+  uint256 public currentBetBalance;
 
-  int256 currentPriceFeed;
-  uint256 DEFAULT_BET_VALUE = 10;
+  int256 public currentPriceFeed;
+  uint256 public betValue = 10;
 
   AggregatorV3Interface internal priceFeed;
 
@@ -68,24 +62,21 @@ contract CryptoBet is Ownable {
 
   // --- FUCTIONS ---
 
-  function nextRound() external {
-    Expectations answerStatus = Expectations(uint256(1));
+  function nextRound() external onlyOwner {
     int256 newPriceFeed = getLatestPrice();
-
     uint256 winners;
+    Expectations answerStatus = getRoundAnswer(newPriceFeed);
 
-    if (newPriceFeed > currentPriceFeed) {
-      answerStatus = Expectations(uint256(2));
-    }
+    // update price feed
     currentPriceFeed = newPriceFeed;
-
+   
     for (uint256 i = 0; i < betters.length; i = i + 1) {
       if (userBets[betters[i]].expectStatus == answerStatus) {
-        userBets[betters[i]].betStatus == Results(uint256(2));
+        userBets[betters[i]].isWinner == true;
         winners = winners + 1;
         // EVT -> you win
       } else {
-        userBets[betters[i]].betStatus == Results(uint256(1));
+        resetUserBet(betters[i]);
         // EVT -> you loose
       }
     }
@@ -95,9 +86,16 @@ contract CryptoBet is Ownable {
     // EVT -> next round
   }
 
+  function getRoundAnswer(int256 _newPriceFeed) private view returns(Expectations) {
+    if (_newPriceFeed > currentPriceFeed) {
+      return Expectations(uint256(2));
+    }
+    return Expectations(uint256(1));
+  }
+
   function computeRewards(uint256 win) private {
     for (uint256 i = 0; i < betters.length; i = i + 1) {
-      if (userBets[betters[i]].betStatus == Results(uint256(2))) {
+      if (userBets[betters[i]].isWinner == true) {
         userBets[betters[i]].balance = win / currentBetBalance;
       }
     }
@@ -106,21 +104,28 @@ contract CryptoBet is Ownable {
   // register a bet
   function registerBet(uint256 _expectation) external payable mustNotBeBetting {
     betters.push(msg.sender);
-    userBets[msg.sender].bet_value = DEFAULT_BET_VALUE;
+    userBets[msg.sender].bet_value = betValue;
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
     userBets[msg.sender].isBetting = true;
+    currentBetBalance = currentBetBalance + betValue;
+    // EVT -> nex bet
   }
 
   // claim a bet
   function claimBet() external mustBeBetting {
-    if (userBets[msg.sender].betStatus == Results(uint256(2))) {
-      // VIREMENT userBets[msg.sender].balance
+    if (userBets[msg.sender].isWinner == true) {
+      (bool success, ) = msg.sender.call{value: userBets[msg.sender].bet_value}("");
+      require (success, unicode"Echec du transfer de la recompense veuillez réessayer");
     }
+    resetUserBet(msg.sender);
+  }
 
-    delete userBets[msg.sender].bet_value;
-    delete userBets[msg.sender].expectStatus;
-    delete userBets[msg.sender].balance;
-    userBets[msg.sender].isBetting = false;
+  function resetUserBet(address _userToRemove) private {
+    delete userBets[_userToRemove].bet_value;
+    delete userBets[_userToRemove].expectStatus;
+    delete userBets[_userToRemove].balance;
+    delete userBets[_userToRemove].isBetting;
+    delete userBets[_userToRemove].isWinner;
   }
 
   // get latest price
