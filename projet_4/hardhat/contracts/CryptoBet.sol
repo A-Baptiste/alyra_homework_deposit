@@ -39,6 +39,10 @@ contract CryptoBet is Ownable {
 
   // --- EVENTS ---
 
+  event evt_newBet(uint256 totalBet, uint256 betBalance);
+  event evt_betFinish(address userAddr, bool result);
+  event evt_nextRound(uint256 winners,  uint256 totalBet);
+
   // --- CONSTRUCTOR ---
   
   // sepolia testnet price feed address (ETH vs USD) :
@@ -98,17 +102,19 @@ contract CryptoBet is Ownable {
       if (userBets[betters[i]].expectStatus == answerStatus) {
         userBets[betters[i]].betStatus = BetStatus(uint256(3));
         winners = winners + 1;
-        // EVT -> you win
+        emit evt_betFinish(betters[i], true); 
       } else {
         userBets[betters[i]].betStatus = BetStatus(uint256(2));
         // resetUserBet(betters[i]);
-        // EVT -> you loose
+        emit evt_betFinish(betters[i], false); 
       }
     }
 
     computeRewards(winners);
+    emit evt_nextRound(winners, betters.length); 
+
     delete betters;
-    // EVT -> next round
+    delete currentBetBalance;
   }
 
   function getRoundAnswer(int256 _newPriceFeed) private view returns(Expectations) {
@@ -133,7 +139,7 @@ contract CryptoBet is Ownable {
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
     userBets[msg.sender].betStatus = BetStatus(uint256(1));
     currentBetBalance = currentBetBalance + betValue;
-    // EVT -> new bet
+    emit evt_newBet(betters.length, currentBetBalance);
   }
 
   // claim a bet
@@ -155,13 +161,7 @@ contract CryptoBet is Ownable {
 
   // get latest price
   function getLatestPrice() public view returns (int) {
-  (
-      uint80 roundID, 
-      int price,
-      uint startedAt,
-      uint timeStamp,
-      uint80 answeredInRound
-  ) = priceFeed.latestRoundData();
+  ( , int price, , , ) = priceFeed.latestRoundData();
       return price;
   }
 
