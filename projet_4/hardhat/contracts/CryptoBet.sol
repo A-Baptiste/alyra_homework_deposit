@@ -8,7 +8,7 @@ import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 contract CryptoBet is Ownable {
   // --- VARIABLES ---
   struct UserBet {
-      uint256 bet_value;
+      uint256 betValue;
       uint256 balance;
       Expectations expectStatus;
       BetStatus betStatus;
@@ -85,7 +85,7 @@ contract CryptoBet is Ownable {
     return betters;
   }
 
-  function getOnebetter(address _addr) public view returns(UserBet memory) {
+  function getOneBetter(address _addr) public view returns(UserBet memory) {
       return userBets[_addr];
   }
 
@@ -135,7 +135,7 @@ contract CryptoBet is Ownable {
   // register a bet
   function registerBet(uint256 _expectation) external payable mustNotBeBetting mustSendRightValue {
     betters.push(msg.sender);
-    userBets[msg.sender].bet_value = betValue;
+    userBets[msg.sender].betValue = betValue;
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
     userBets[msg.sender].betStatus = BetStatus(uint256(1));
     currentBetBalance = currentBetBalance + betValue;
@@ -146,14 +146,14 @@ contract CryptoBet is Ownable {
   function claimBet() external mustBetEnded{
     // TODO get marge
     if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
-      (bool success, ) = msg.sender.call{value: userBets[msg.sender].bet_value}("");
+      (bool success, ) = msg.sender.call{value: userBets[msg.sender].betValue}("");
       require (success, unicode"Reward transfer failed, please retry");
     }
     resetUserBet(msg.sender);
   }
 
   function resetUserBet(address _userToRemove) private {
-    delete userBets[_userToRemove].bet_value;
+    delete userBets[_userToRemove].betValue;
     delete userBets[_userToRemove].expectStatus;
     delete userBets[_userToRemove].balance;
     delete userBets[msg.sender].betStatus;
