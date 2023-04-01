@@ -147,7 +147,7 @@ contract CryptoBet is Ownable {
     // TODO get marge
     if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
       (bool success, ) = msg.sender.call{value: userBets[msg.sender].bet_value}("");
-      require (success, unicode"Echec du transfer de la recompense veuillez réessayer");
+      require (success, unicode"Reward transfer failed, please retry");
     }
     resetUserBet(msg.sender);
   }
