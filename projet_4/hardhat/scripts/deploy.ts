@@ -1,19 +1,12 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const cryptoBetContract = await ethers.getContractFactory("CryptoBet");
+  const cryptoBet = await cryptoBetContract.deploy();
 
-  const lockedAmount = ethers.utils.parseEther("0.001");
+  await cryptoBet.deployed();
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-  await lock.deployed();
-
-  console.log(
-    `Lock with ${ethers.utils.formatEther(lockedAmount)}ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  console.log(`Voting deployed to ${cryptoBet.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
