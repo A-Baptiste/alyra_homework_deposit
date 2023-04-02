@@ -1,8 +1,10 @@
 import { ethers } from "hardhat";
+require('dotenv').config();
 
 async function main() {
   const cryptoBetContract = await ethers.getContractFactory("CryptoBet");
-  const cryptoBet = await cryptoBetContract.deploy();
+  // @ts-ignore
+  const cryptoBet = await cryptoBetContract.deploy(process.env.SEPOLIA_ORACLE_ADDRESS);
 
   await cryptoBet.deployed();
 
