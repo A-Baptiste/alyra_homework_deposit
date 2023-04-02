@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.17;
 
 // import "hardhat/console.sol";
@@ -48,8 +49,8 @@ contract CryptoBet is Ownable {
   // sepolia testnet price feed address (ETH vs USD) :
   // 0x694AA1769357215DE4FAC081bf1f309aDC325306
 
-  constructor() {
-      priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+  constructor(address _oracleAddress) {
+      priceFeed = AggregatorV3Interface(_oracleAddress);
   }
 
   // --- MODIFIERS ---
