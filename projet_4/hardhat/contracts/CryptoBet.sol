@@ -42,7 +42,7 @@ contract CryptoBet is Ownable {
 
   event evt_newBet(uint256 totalBet, uint256 betBalance);
   event evt_betFinish(address userAddr, bool result);
-  event evt_nextRound(uint256 winners,  uint256 totalBet);
+  event evt_nextRound(uint256 winners,  uint256 totalBet, int256 newPriceFeed);
 
   // --- CONSTRUCTOR ---
   
@@ -112,7 +112,7 @@ contract CryptoBet is Ownable {
     }
 
     computeRewards(winners);
-    emit evt_nextRound(winners, betters.length); 
+    emit evt_nextRound(winners, betters.length, currentPriceFeed); 
 
     delete betters;
     delete currentBetBalance;
@@ -128,7 +128,7 @@ contract CryptoBet is Ownable {
   function computeRewards(uint256 win) private {
     for (uint256 i = 0; i < betters.length; i = i + 1) {
       if (userBets[betters[i]].betStatus == BetStatus(uint256(3))) {
-        userBets[betters[i]].balance = win / currentBetBalance;
+        userBets[betters[i]].balance = currentBetBalance / win;
       }
     }
   }
@@ -147,7 +147,7 @@ contract CryptoBet is Ownable {
   function claimBet() external mustBetEnded{
     // TODO get marge
     if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
-      (bool success, ) = msg.sender.call{value: userBets[msg.sender].betValue}("");
+      (bool success, ) = msg.sender.call{value: userBets[msg.sender].balance}("");
       require (success, unicode"Reward transfer failed, please retry");
     }
     resetUserBet(msg.sender);
