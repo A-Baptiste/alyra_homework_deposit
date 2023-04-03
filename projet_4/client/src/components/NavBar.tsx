@@ -8,9 +8,9 @@ function NavBar() {
 
   return (
     <div className="navbar flex justify-between bg-[#2F2C2C]">
-        <span className='text-primary font-bold text-2xl border px-3 py-1 border-primary rounded-full'>
-          EASYDAPP
-        </span>
+      <span className='text-primary font-bold text-2xl border px-3 py-1 border-primary rounded-full'>
+        EASYDAPP
+      </span>
       <div className="flex flex-col items-end">
         <div className="flex flex-col items-center">
           <ConnectButton />
