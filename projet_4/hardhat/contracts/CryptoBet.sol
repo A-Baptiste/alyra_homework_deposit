@@ -35,6 +35,7 @@ contract CryptoBet is Ownable {
 
   int256 public currentPriceFeed;
   uint256 public betValue = 10;
+  uint256 salesMargin = 90; // means 10% margin 
 
   AggregatorV3Interface internal priceFeed;
 
@@ -145,9 +146,9 @@ contract CryptoBet is Ownable {
 
   // claim a bet
   function claimBet() external mustBetEnded{
-    // TODO get marge
     if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
-      (bool success, ) = msg.sender.call{value: userBets[msg.sender].balance}("");
+      uint256 rewardValue = ( userBets[msg.sender].balance * salesMargin ) / 100;
+      (bool success, ) = msg.sender.call{value: rewardValue}("");
       require (success, unicode"Reward transfer failed, please retry");
     }
     resetUserBet(msg.sender);

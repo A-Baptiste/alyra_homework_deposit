@@ -20,7 +20,8 @@ describe("-- CRYPTO BET ---", function () {
 
   const BET_VALUE = "0.000000000000000010" // 10 wei
   const BET_VALUE_WRONG = "0.000000000000000015" // 15 wei
-  const BET_VALUE_DOUBLE = "0.000000000000000020" // 20 wei
+  const BALANCE_MARGIN_1 = "0.000000000000000009" // 9 wei
+  const BALANCE_MARGIN_2 = "0.000000000000000018" // 20 wei
 
   describe("-> Getters functions :", function () {
     it("getBetters() should return array of betters", async function () {
@@ -309,7 +310,7 @@ describe("-- CRYPTO BET ---", function () {
         
       await expect(cryptoBet.claimBet()).to.changeEtherBalances(
         [owner, cryptoBet],
-        [ethers.utils.parseEther(BET_VALUE), -ethers.utils.parseEther(BET_VALUE)]
+        [ethers.utils.parseEther(BALANCE_MARGIN_1), -ethers.utils.parseEther(BALANCE_MARGIN_1)]
       );
     });
 
@@ -325,7 +326,7 @@ describe("-- CRYPTO BET ---", function () {
         
       await expect(cryptoBet.claimBet()).to.changeEtherBalances(
         [owner, cryptoBet],
-        [ethers.utils.parseEther(BET_VALUE_DOUBLE), -ethers.utils.parseEther(BET_VALUE_DOUBLE)]
+        [ethers.utils.parseEther(BALANCE_MARGIN_2), -ethers.utils.parseEther(BALANCE_MARGIN_2)]
       );
     });
   });
