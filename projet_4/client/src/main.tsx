@@ -33,7 +33,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <RainbowKitProvider
       chains={chains}
       theme={lightTheme({
-        accentColor: '#7b3fe4',
+        accentColor: '#00AE53',
       })}
     >
       <App />
