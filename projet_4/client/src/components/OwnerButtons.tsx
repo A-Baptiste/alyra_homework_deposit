@@ -6,7 +6,7 @@ function OwnerButtons() {
   const { handleNextRound, handleRegisterBet, getLastRound } = useCryptoBet();
 
   return (
-    <div className="navbar flex flex-col bg-[#2F2C2C]">
+    <div className="navbar flex flex-col bg-[#2F2C2C] py-5">
       <div className='pb-3'>
         Espace propiétaire
       </div>

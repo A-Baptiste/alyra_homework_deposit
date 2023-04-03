@@ -53,14 +53,17 @@ function Timer() {
   
 
   return (
-    <div className="flex justify-center gap-5 my-5">
+    <div className="flex flex-col items-center gap-1 my-5">
+      <div className='font-bold'>
+        Temps restant avant le prochain round
+      </div>
       {hours < 0 ? (
         <div className='flex text-xl font-bold gap-5'>
           <div className='text-primary animate-spin h-7 w-7 border-t border-b border-primary rounded-full' />
           Calculs en cours
         </div>
       ) : (
-        <>
+        <div className='flex justify-center gap-5'>
           <div className='flex flex-col items-center'>
             <div className='text-4xl'>{hours}</div>
             <div className='text-primary'>heures</div>
@@ -73,7 +76,7 @@ function Timer() {
             <div className='text-4xl'>{second}</div>
             <div className='text-primary'>secondes</div>
           </div>
-        </>
+        </div>
       )}
       
     </div>
