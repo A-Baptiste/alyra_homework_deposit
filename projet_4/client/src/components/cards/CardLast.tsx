@@ -5,7 +5,7 @@ function CardLast() {
   const { isConnected } = useAccount();
   const { handleNextRound, handleRegisterBet, getLastRound } = useCryptoBet();
 
-  const hasReward = false;
+  const hasReward = true;
 
   return (
     <div className="card w-96 shadow-xl bg-[#2F2C2C]">
