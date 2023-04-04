@@ -397,6 +397,24 @@ describe("-- CRYPTO BET ---", function () {
           .to.emit(cryptoBet, "evt_betFinish")
           .withArgs(owner.address, false);
       });
+
+      it("trigger bet finish event on win (use token)", async function () {
+        const { cryptoBet, owner } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.registerBetErc20(2);
+        await expect(cryptoBet.nextRound())
+          .to.emit(cryptoBet, "evt_betFinish")
+          .withArgs(owner.address, true);
+      });
+
+      it("trigger bet finish event on loose (use token)", async function () {
+        const { cryptoBet, owner } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.registerBetErc20(1);
+        await expect(cryptoBet.nextRound())
+          .to.emit(cryptoBet, "evt_betFinish")
+          .withArgs(owner.address, false);
+      });
     })
 
     describe("evt_nextRound :", function () {
@@ -428,6 +446,62 @@ describe("-- CRYPTO BET ---", function () {
         await expect(cryptoBet.nextRound())
           .to.emit(cryptoBet, "evt_nextRound")
           .withArgs(2, 0, 0, 0, await cryptoBet.currentPriceFeed());
+      });
+
+      it("trigger next round with right data ( 1 winner 1 looser ) (use token)", async function () {
+        const { cryptoBet, addr1 } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.connect(addr1).mintEDFT();
+
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.connect(addr1).registerBetErc20(2);
+        await expect(cryptoBet.nextRound())
+          .to.emit(cryptoBet, "evt_nextRound")
+          .withArgs(0, 1, 0, 1, await cryptoBet.currentPriceFeed());
+      });
+
+      it("trigger next round with right data ( 2 losers ) (use token)", async function () {
+        const { cryptoBet, addr1 } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.connect(addr1).mintEDFT();
+
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.connect(addr1).registerBetErc20(1);
+        await expect(cryptoBet.nextRound())
+          .to.emit(cryptoBet, "evt_nextRound")
+          .withArgs(0, 0, 0, 2, await cryptoBet.currentPriceFeed());
+      });
+
+      it("trigger next round with right data ( 2 winners ) (use token)", async function () {
+        const { cryptoBet, addr1 } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.connect(addr1).mintEDFT();
+
+        await cryptoBet.registerBetErc20(2);
+        await cryptoBet.connect(addr1).registerBetErc20(2);
+        await expect(cryptoBet.nextRound())
+          .to.emit(cryptoBet, "evt_nextRound")
+          .withArgs(0, 2, 0, 0, await cryptoBet.currentPriceFeed());
+      });
+
+      it("trigger next round with right data (token and eth user)", async function () {
+        const { cryptoBet, owner, addr1, addr2, addr3 } = await setupCryptoBet();
+
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        // vote down always loose - vote up always win
+        await cryptoBet.connect(addr1).mintEDFT();
+
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.connect(addr1).registerBetErc20(2);
+        await cryptoBet.connect(addr2).registerBet(1,  { value: ethers.utils.parseEther(BET_VALUE) });
+        await cryptoBet.connect(addr3).registerBet(2,  { value: ethers.utils.parseEther(BET_VALUE) });
+
+        expect(await cryptoBet.currentBetBalance()).to.equal(20);
+        expect(await cryptoBet.currentBetBalanceErc20()).to.equal(20);
+
+        await expect(cryptoBet.nextRound())
+          .to.emit(cryptoBet, "evt_nextRound")
+          .withArgs(1, 1, 1, 1, await cryptoBet.currentPriceFeed());
       });
     })
   });
@@ -491,6 +565,17 @@ describe("-- CRYPTO BET ---", function () {
         await expect(cryptoBet.claimBet())
         .to.be.revertedWith(
           "wait till your bet has finished"
+        );
+      });
+    })
+
+    describe("mintEDFT() :", function () {
+      it("Should revert if user has too much token", async function () {
+        const { cryptoBet } = await setupCryptoBet();
+
+        await expect(cryptoBet.mintEDFT())
+        .to.be.revertedWith(
+          "you have too much EDFT"
         );
       });
     })
