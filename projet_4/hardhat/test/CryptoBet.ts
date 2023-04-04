@@ -633,6 +633,17 @@ describe("-- CRYPTO BET ---", function () {
         );
       });
     })
+
+    describe("drainTheFund() :", function () {
+      it("Should revert if caller is not owner", async function () {
+        const { cryptoBet, addr1 } = await setupCryptoBet();
+
+        await expect(cryptoBet.connect(addr1).drainTheFund(ethers.utils.parseEther(BET_VALUE)))
+        .to.be.revertedWith(
+          "Ownable: caller is not the owner"
+        );
+      });
+    })
   });
 
   describe("-> Value transfers", function () {
@@ -664,6 +675,21 @@ describe("-- CRYPTO BET ---", function () {
       await expect(cryptoBet.claimBet()).to.changeEtherBalances(
         [owner, cryptoBet],
         [ethers.utils.parseEther(BALANCE_MARGIN_2), -ethers.utils.parseEther(BALANCE_MARGIN_2)]
+      );
+    });
+
+    it("Should drain right funds to the owner", async function () {
+      const { cryptoBet, owner, addr1 } = await setupCryptoBet();
+      expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+      await cryptoBet.registerBet(1, { value: ethers.utils.parseEther(BET_VALUE) });
+      await cryptoBet.nextRound();
+
+      const getBetOwner = await cryptoBet.getOneBetter(owner.address);
+      expect(getBetOwner.balance).to.equal(0);
+        
+      await expect(cryptoBet.drainTheFund(ethers.utils.parseEther(BET_VALUE))).to.changeEtherBalances(
+        [owner, cryptoBet],
+        [ethers.utils.parseEther(BET_VALUE), -ethers.utils.parseEther(BET_VALUE)]
       );
     });
 
