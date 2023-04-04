@@ -6,12 +6,12 @@ require('dotenv').config();
 
 describe("-- CRYPTO BET ---", function () {
   async function setupCryptoBet() {
-    const [owner, addr1, addr2] = await ethers.getSigners();
+    const [owner, addr1, addr2, addr3] = await ethers.getSigners();
     const cryptoBetContract = await ethers.getContractFactory("CryptoBet");
     // @ts-ignore
     const cryptoBet = await cryptoBetContract.deploy(process.env.SEPOLIA_ORACLE_ADDRESS);
 
-    return { cryptoBet, owner, addr1, addr2 };
+    return { cryptoBet, owner, addr1, addr2, addr3 };
   }
 
   function BN(value: number) {
@@ -189,6 +189,125 @@ describe("-- CRYPTO BET ---", function () {
         expect(getBetAddr1.betStatus).to.equal(3);
         expect(getBetAddr1.balance).to.equal(BN(10));
       });
+
+      it("should compute results correctly ( 1 winner 1 looser ) (use token)", async function () {
+        const { cryptoBet, owner, addr1 } = await setupCryptoBet();
+
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        // vote down always loose - vote up always win
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.connect(addr1).mintEDFT();
+        await cryptoBet.connect(addr1).registerBetErc20(2);
+        await cryptoBet.nextRound();
+
+        const getBetOwner = await cryptoBet.getOneBetter(owner.address)
+        const getBetAddr1 = await cryptoBet.getOneBetter(addr1.address);
+
+        expect(getBetOwner.betValue).to.equal(BN(10));
+        expect(getBetOwner.expectStatus).to.equal(1);
+        expect(getBetOwner.betStatus).to.equal(2);
+        expect(getBetOwner.balance).to.equal(BN(0));
+
+        expect(getBetAddr1.betValue).to.equal(BN(10));
+        expect(getBetAddr1.expectStatus).to.equal(2);
+        expect(getBetAddr1.betStatus).to.equal(3);
+        expect(getBetAddr1.balance).to.equal(BN(20));
+      });
+
+      it("should compute results correctly ( 2 losers ) (use token)", async function () {
+        const { cryptoBet, owner, addr1 } = await setupCryptoBet();
+
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        // vote down always loose - vote up always win
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.connect(addr1).mintEDFT();
+        await cryptoBet.connect(addr1).registerBetErc20(1);
+        await cryptoBet.nextRound();
+
+        const getBetOwner = await cryptoBet.getOneBetter(owner.address)
+        const getBetAddr1 = await cryptoBet.getOneBetter(addr1.address);
+
+        expect(getBetOwner.betValue).to.equal(BN(10));
+        expect(getBetOwner.expectStatus).to.equal(1);
+        expect(getBetOwner.betStatus).to.equal(2);
+        expect(getBetOwner.balance).to.equal(BN(0));
+
+        expect(getBetAddr1.betValue).to.equal(BN(10));
+        expect(getBetAddr1.expectStatus).to.equal(1);
+        expect(getBetAddr1.betStatus).to.equal(2);
+        expect(getBetAddr1.balance).to.equal(BN(0));
+      });
+
+      it("should compute results correctly ( 2 winner ) (use token)", async function () {
+        const { cryptoBet, owner, addr1 } = await setupCryptoBet();
+
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        // vote down always loose - vote up always win
+        await cryptoBet.registerBetErc20(2);
+        await cryptoBet.connect(addr1).mintEDFT();
+        await cryptoBet.connect(addr1).registerBetErc20(2);
+        await cryptoBet.nextRound();
+
+        const getBetOwner = await cryptoBet.getOneBetter(owner.address)
+        const getBetAddr1 = await cryptoBet.getOneBetter(addr1.address);
+
+        expect(getBetOwner.betValue).to.equal(BN(10));
+        expect(getBetOwner.expectStatus).to.equal(2);
+        expect(getBetOwner.betStatus).to.equal(3);
+        expect(getBetOwner.balance).to.equal(BN(10));
+
+        expect(getBetAddr1.betValue).to.equal(BN(10));
+        expect(getBetAddr1.expectStatus).to.equal(2);
+        expect(getBetAddr1.betStatus).to.equal(3);
+        expect(getBetAddr1.balance).to.equal(BN(10));
+      });
+
+      it("should compute results correctly (token and eth user)", async function () {
+        const { cryptoBet, owner, addr1, addr2, addr3 } = await setupCryptoBet();
+
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        // vote down always loose - vote up always win
+        await cryptoBet.connect(addr1).mintEDFT();
+
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.connect(addr1).registerBetErc20(2);
+        await cryptoBet.connect(addr2).registerBet(1,  { value: ethers.utils.parseEther(BET_VALUE) });
+        await cryptoBet.connect(addr3).registerBet(2,  { value: ethers.utils.parseEther(BET_VALUE) });
+
+        expect(await cryptoBet.currentBetBalance()).to.equal(20);
+        expect(await cryptoBet.currentBetBalanceErc20()).to.equal(20);
+
+        await cryptoBet.nextRound();
+
+        const getBetOwner = await cryptoBet.getOneBetter(owner.address);
+        const getBetAddr1 = await cryptoBet.getOneBetter(addr1.address);
+        const getBetAddr2 = await cryptoBet.getOneBetter(addr2.address);
+        const getBetAddr3 = await cryptoBet.getOneBetter(addr3.address);
+
+
+        expect(getBetOwner.betValue).to.equal(BN(10));
+        expect(getBetOwner.expectStatus).to.equal(1);
+        expect(getBetOwner.betStatus).to.equal(2);
+        expect(getBetOwner.balance).to.equal(BN(0));
+
+        expect(getBetAddr1.betValue).to.equal(BN(10));
+        expect(getBetAddr1.expectStatus).to.equal(2);
+        expect(getBetAddr1.betStatus).to.equal(3);
+        expect(getBetAddr1.balance).to.equal(BN(20));
+
+        expect(getBetAddr2.betValue).to.equal(BN(10));
+        expect(getBetAddr2.expectStatus).to.equal(1);
+        expect(getBetAddr2.betStatus).to.equal(2);
+        expect(getBetAddr2.balance).to.equal(BN(0));
+
+        expect(getBetAddr3.betValue).to.equal(BN(10));
+        expect(getBetAddr3.expectStatus).to.equal(2);
+        expect(getBetAddr3.betStatus).to.equal(3);
+        expect(getBetAddr3.balance).to.equal(BN(20));
+
+        expect(await cryptoBet.currentBetBalance()).to.equal(0);
+        expect(await cryptoBet.currentBetBalanceErc20()).to.equal(0);
+      });
     })
 
     describe("claimBet() :", function () {
@@ -249,13 +368,14 @@ describe("-- CRYPTO BET ---", function () {
           .withArgs(1, BN(10), true);
       });
 
-      it.skip("trigger new bet event (second bet - use token)", async function () {
+      it("trigger new bet event (second bet - use token)", async function () {
         const { cryptoBet, addr1 } = await setupCryptoBet();
-        await cryptoBet.registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) });
+        await cryptoBet.registerBetErc20(2);
 
+        await cryptoBet.connect(addr1).mintEDFT();
         await expect(cryptoBet.connect(addr1).registerBetErc20(2))
           .to.emit(cryptoBet, "evt_newBet")
-          .withArgs(2, BN(20));
+          .withArgs(2, BN(20), true);
       });
     })
 
@@ -287,7 +407,7 @@ describe("-- CRYPTO BET ---", function () {
         await cryptoBet.connect(addr1).registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) });
         await expect(cryptoBet.nextRound())
           .to.emit(cryptoBet, "evt_nextRound")
-          .withArgs(1, 2, await cryptoBet.currentPriceFeed());
+          .withArgs(1, 0, 1, 0, await cryptoBet.currentPriceFeed());
       });
 
       it("trigger next round with right data ( 2 losers )", async function () {
@@ -297,7 +417,7 @@ describe("-- CRYPTO BET ---", function () {
         await cryptoBet.connect(addr1).registerBet(1, { value: ethers.utils.parseEther(BET_VALUE) });
         await expect(cryptoBet.nextRound())
           .to.emit(cryptoBet, "evt_nextRound")
-          .withArgs(0, 2, await cryptoBet.currentPriceFeed());
+          .withArgs(0, 0, 2, 0, await cryptoBet.currentPriceFeed());
       });
 
       it("trigger next round with right data ( 2 winners )", async function () {
@@ -307,7 +427,7 @@ describe("-- CRYPTO BET ---", function () {
         await cryptoBet.connect(addr1).registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) });
         await expect(cryptoBet.nextRound())
           .to.emit(cryptoBet, "evt_nextRound")
-          .withArgs(2, 2, await cryptoBet.currentPriceFeed());
+          .withArgs(2, 0, 0, 0, await cryptoBet.currentPriceFeed());
       });
     })
   });
