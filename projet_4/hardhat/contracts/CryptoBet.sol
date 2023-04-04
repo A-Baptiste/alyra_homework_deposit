@@ -51,7 +51,13 @@ contract CryptoBet is Ownable, ERC20 {
 
   event evt_newBet(uint256 totalBet, uint256 betBalance, bool token);
   event evt_betFinish(address userAddr, bool result);
-  event evt_nextRound(uint256 winners,  uint256 totalBet, int256 newPriceFeed);
+  event evt_nextRound(
+    uint256 winners,
+    uint256 winnersErc20,
+    uint256 loosers,
+    uint256 loosersErc20,
+    int256 newPriceFeed
+  );
 
   // --- CONSTRUCTOR ---
   
@@ -118,11 +124,14 @@ contract CryptoBet is Ownable, ERC20 {
   }
 
   /**
-  * @dev comptue winners and switch to next round
+  * @dev comptue winners (ETH and EDFT) and switch to next round
   */
   function nextRound() external onlyOwner {
     int256 newPriceFeed = getLatestPrice();
     uint256 winners;
+    uint256 winnersErc20;
+    uint256 loosers;
+    uint256 loosersErc20;
     Expectations answerStatus = getRoundAnswer(newPriceFeed);
 
     // update price feed
@@ -132,20 +141,36 @@ contract CryptoBet is Ownable, ERC20 {
     for (uint256 i = 0; i < betters.length; i = i + 1) {
       if (userBets[betters[i]].expectStatus == answerStatus) {
         userBets[betters[i]].betStatus = BetStatus(uint256(3));
-        winners = winners + 1;
+        if (userBets[betters[i]].token == true) {
+          winnersErc20 = winnersErc20 + 1;
+        } else {
+          winners = winners + 1;
+        }
         emit evt_betFinish(betters[i], true); 
       } else {
         userBets[betters[i]].betStatus = BetStatus(uint256(2));
+        if (userBets[betters[i]].token == true) {
+          loosersErc20 = loosersErc20 + 1;
+        } else {
+          loosers = loosers + 1;
+        }
         // resetUserBet(betters[i]);
         emit evt_betFinish(betters[i], false); 
       }
     }
 
-    computeRewards(winners);
-    emit evt_nextRound(winners, betters.length, currentPriceFeed); 
+    computeRewards(winners, winnersErc20);
+    emit evt_nextRound(
+      winners,
+      winnersErc20,
+      loosers,
+      loosersErc20,
+      currentPriceFeed
+    ); 
 
     delete betters;
     delete currentBetBalance;
+    delete currentBetBalanceErc20;
   }
 
   /**
@@ -163,11 +188,16 @@ contract CryptoBet is Ownable, ERC20 {
   /**
   * @dev compute rewards for the winnig betters
   * @param win number of winner
+  * @param winErc20 number of winner using EDFT
   */
-  function computeRewards(uint256 win) private {
+  function computeRewards(uint256 win, uint256 winErc20) private {
     for (uint256 i = 0; i < betters.length; i = i + 1) {
       if (userBets[betters[i]].betStatus == BetStatus(uint256(3))) {
-        userBets[betters[i]].balance = currentBetBalance / win;
+        if (userBets[betters[i]].token == true) {
+          userBets[betters[i]].balance = currentBetBalanceErc20 / winErc20;
+        } else {
+          userBets[betters[i]].balance = currentBetBalance / win;
+        }
       }
     }
   }
@@ -226,6 +256,13 @@ contract CryptoBet is Ownable, ERC20 {
     delete userBets[_userToRemove].expectStatus;
     delete userBets[_userToRemove].balance;
     delete userBets[msg.sender].betStatus;
+  }
+
+  /**
+  * @dev mint some edft
+  */
+  function mintEDFT() external {
+    _mint(msg.sender, betValue * 3);
   }
 
   /**
