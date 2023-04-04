@@ -5,8 +5,14 @@ pragma solidity ^0.8.17;
 // import "hardhat/console.sol";
 import "../node_modules/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract CryptoBet is Ownable {
+/**
+* @title CryptoBet
+* @author Baptiste ALCHAIR
+* @notice Bet on crypto currency rate, with eth or custom erc20
+*/
+contract CryptoBet is Ownable, ERC20 {
   // --- VARIABLES ---
   struct UserBet {
       uint256 betValue;
@@ -50,8 +56,9 @@ contract CryptoBet is Ownable {
   // sepolia testnet price feed address (ETH vs USD) :
   // 0x694AA1769357215DE4FAC081bf1f309aDC325306
 
-  constructor(address _oracleAddress) {
+  constructor(address _oracleAddress) ERC20("EasyDappFreeToken", "EDFT") {
       priceFeed = AggregatorV3Interface(_oracleAddress);
+      _mint(msg.sender,1000*10**18);
   }
 
   // --- MODIFIERS ---
@@ -83,14 +90,26 @@ contract CryptoBet is Ownable {
 
   // --- FUCTIONS ---
 
+  /**
+  * @dev Return betters array
+  * @return betters array
+  */
   function getBetters() public view returns(address[] memory) {
     return betters;
   }
 
+  /**
+  * @dev return better data by his address
+  * @param _addr better's address
+  * @return UserBet struct
+  */
   function getOneBetter(address _addr) public view returns(UserBet memory) {
       return userBets[_addr];
   }
 
+  /**
+  * @dev comptue winners and switch to next round
+  */
   function nextRound() external onlyOwner {
     int256 newPriceFeed = getLatestPrice();
     uint256 winners;
@@ -119,6 +138,11 @@ contract CryptoBet is Ownable {
     delete currentBetBalance;
   }
 
+  /**
+  * @dev compute round answer with current and last price feed
+  * @param _newPriceFeed new price feed
+  * @return Expectations enum (1 or 2)
+  */
   function getRoundAnswer(int256 _newPriceFeed) private view returns(Expectations) {
     if (_newPriceFeed > currentPriceFeed) {
       return Expectations(uint256(2));
@@ -126,6 +150,10 @@ contract CryptoBet is Ownable {
     return Expectations(uint256(1));
   }
 
+  /**
+  * @dev compute rewards for the winnig betters
+  * @param win number of winner
+  */
   function computeRewards(uint256 win) private {
     for (uint256 i = 0; i < betters.length; i = i + 1) {
       if (userBets[betters[i]].betStatus == BetStatus(uint256(3))) {
@@ -134,7 +162,10 @@ contract CryptoBet is Ownable {
     }
   }
 
-  // register a bet
+  /**
+  * @dev register a bet
+  * @param _expectation expectation af results (up or down)
+  */
   function registerBet(uint256 _expectation) external payable mustNotBeBetting mustSendRightValue {
     betters.push(msg.sender);
     userBets[msg.sender].betValue = betValue;
@@ -144,7 +175,9 @@ contract CryptoBet is Ownable {
     emit evt_newBet(betters.length, currentBetBalance);
   }
 
-  // claim a bet
+  /**
+  * @dev claim a reward if sender is a winner
+  */
   function claimBet() external mustBetEnded{
     if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
       uint256 rewardValue = ( userBets[msg.sender].balance * salesMargin ) / 100;
@@ -154,6 +187,10 @@ contract CryptoBet is Ownable {
     resetUserBet(msg.sender);
   }
 
+  /**
+  * @dev reset bet user data
+  * @param _userToRemove user's address to remove
+  */
   function resetUserBet(address _userToRemove) private {
     delete userBets[_userToRemove].betValue;
     delete userBets[_userToRemove].expectStatus;
@@ -161,7 +198,9 @@ contract CryptoBet is Ownable {
     delete userBets[msg.sender].betStatus;
   }
 
-  // get latest price
+  /**
+  * @dev call oracle to get latest price
+  */
   function getLatestPrice() public view returns (int) {
   ( , int price, , , ) = priceFeed.latestRoundData();
       return price;
