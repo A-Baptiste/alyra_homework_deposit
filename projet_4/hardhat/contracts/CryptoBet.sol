@@ -43,7 +43,8 @@ contract CryptoBet is Ownable, ERC20 {
 
   int256 public currentPriceFeed;
   uint256 public betValue = 10;
-  uint256 salesMargin = 90; // means 10% margin 
+  uint256 salesMargin = 90; // means 10% margin
+  bool transferPending; // avoid re-entrency
 
   AggregatorV3Interface internal priceFeed;
 
@@ -256,12 +257,19 @@ contract CryptoBet is Ownable, ERC20 {
   * @dev claim a reward if sender is a winner
   */
   function claimBet() external mustBetEnded{
-    if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
-      uint256 rewardValue = ( userBets[msg.sender].balance * salesMargin ) / 100;
-      (bool success, ) = msg.sender.call{value: rewardValue}("");
-      require (success, unicode"Reward transfer failed, please retry");
+    if (userBets[msg.sender].betStatus == BetStatus(uint256(3)) && transferPending == false) {
+      transferPending = true;
+      if (userBets[msg.sender].token == true) {
+        bool response = transferFrom(owner(), msg.sender, userBets[msg.sender].balance);
+        require (response == true, unicode"transfer erc20 failed, please retry");
+      } else {
+        uint256 rewardValue = ( userBets[msg.sender].balance * salesMargin ) / 100;
+        (bool success, ) = msg.sender.call{value: rewardValue}("");
+        require (success, unicode"Reward transfer failed, please retry");
+      }
     }
     resetUserBet(msg.sender);
+    transferPending = false;
   }
 
   /**
@@ -272,7 +280,8 @@ contract CryptoBet is Ownable, ERC20 {
     delete userBets[_userToRemove].betValue;
     delete userBets[_userToRemove].expectStatus;
     delete userBets[_userToRemove].balance;
-    delete userBets[msg.sender].betStatus;
+    delete userBets[_userToRemove].betStatus;
+    delete userBets[_userToRemove].token;
   }
 
   /**
