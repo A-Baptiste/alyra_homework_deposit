@@ -96,6 +96,23 @@ contract CryptoBet is Ownable, ERC20 {
       _;
   }
 
+  // avoid dos gas limit
+  modifier mustRemainsSpace() {
+      require(
+          betters.length < 10000,
+          unicode"bet pool is full"
+      );
+      _;
+  }
+
+  modifier mustHaveLowToken() {
+    require(
+          balanceOf(msg.sender) < betValue * 3,
+          unicode"you have too much EDFT"
+      );
+      _;
+  }
+
   modifier mustEnouthErc20() {
     require(
           balanceOf(msg.sender) >= betValue,
@@ -206,7 +223,7 @@ contract CryptoBet is Ownable, ERC20 {
   * @dev register a bet
   * @param _expectation expectation af results (up or down)
   */
-  function registerBet(uint256 _expectation) external payable mustNotBeBetting mustSendRightValue {
+  function registerBet(uint256 _expectation) external payable mustNotBeBetting mustSendRightValue mustRemainsSpace {
     betters.push(msg.sender);
     userBets[msg.sender].betValue = betValue;
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
@@ -219,7 +236,7 @@ contract CryptoBet is Ownable, ERC20 {
   * @dev register a bet with erc20
   * @param _expectation expectation af results (up or down)
   */
-  function registerBetErc20(uint256 _expectation) external mustNotBeBetting mustEnouthErc20{
+  function registerBetErc20(uint256 _expectation) external mustNotBeBetting mustEnouthErc20 mustRemainsSpace {
     // handle token tranfer
     increaseAllowance(msg.sender, betValue);
     bool response = transferFrom(msg.sender, owner(), betValue);
@@ -261,7 +278,7 @@ contract CryptoBet is Ownable, ERC20 {
   /**
   * @dev mint some edft
   */
-  function mintEDFT() external {
+  function mintEDFT() external mustHaveLowToken {
     _mint(msg.sender, betValue * 3);
   }
 
