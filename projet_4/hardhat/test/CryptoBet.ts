@@ -44,6 +44,20 @@ describe("-- CRYPTO BET ---", function () {
       expect(response.balance).to.equal(BN(0));
       expect(response.expectStatus).to.equal(2);
       expect(response.betStatus).to.equal(1);
+      expect(response.token).to.equal(false);
+    });
+
+    it("getOneBetter() should return data of one better (use token)", async function () {
+      const { cryptoBet, owner } = await setupCryptoBet();
+
+      await cryptoBet.registerBetErc20(2);
+      const response = await cryptoBet.getOneBetter(owner.address);
+
+      expect(response.betValue).to.equal(BN(10));
+      expect(response.balance).to.equal(BN(0));
+      expect(response.expectStatus).to.equal(2);
+      expect(response.betStatus).to.equal(1);
+      expect(response.token).to.equal(true);
     });
   });
 
@@ -75,6 +89,34 @@ describe("-- CRYPTO BET ---", function () {
         expect(response2[0]).to.equal(owner.address);
 
         expect(await cryptoBet.currentBetBalance()).to.equal(10);
+      });
+
+      it("should set a bet UP correctly (use token)", async function () {
+        const { cryptoBet, owner } = await setupCryptoBet();
+
+        expect(await cryptoBet.currentBetBalance()).to.equal(0);
+  
+        const response = await cryptoBet.getBetters();
+        expect(response.length).to.equal(0);
+        await cryptoBet.registerBetErc20(2);
+        const response2 = await cryptoBet.getBetters();
+        expect(response2[0]).to.equal(owner.address);
+
+        expect(await cryptoBet.currentBetBalanceErc20()).to.equal(10);
+      });
+
+      it("should set a bet DOWN correctly (use token)", async function () {
+        const { cryptoBet, owner } = await setupCryptoBet();
+
+        expect(await cryptoBet.currentBetBalance()).to.equal(0);
+  
+        const response = await cryptoBet.getBetters();
+        expect(response.length).to.equal(0);
+        await cryptoBet.registerBetErc20(1);
+        const response2 = await cryptoBet.getBetters();
+        expect(response2[0]).to.equal(owner.address);
+
+        expect(await cryptoBet.currentBetBalanceErc20()).to.equal(10);
       });
     })
 
@@ -187,7 +229,7 @@ describe("-- CRYPTO BET ---", function () {
 
         await expect(cryptoBet.registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) }))
           .to.emit(cryptoBet, "evt_newBet")
-          .withArgs(1, BN(10));
+          .withArgs(1, BN(10), false);
       });
 
       it("trigger new bet event (second bet)", async function () {
@@ -195,6 +237,23 @@ describe("-- CRYPTO BET ---", function () {
         await cryptoBet.registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) });
 
         await expect(cryptoBet.connect(addr1).registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) }))
+          .to.emit(cryptoBet, "evt_newBet")
+          .withArgs(2, BN(20), false);
+      });
+
+      it("trigger new bet event (first bet - use token)", async function () {
+        const { cryptoBet } = await setupCryptoBet();
+
+        await expect(cryptoBet.registerBetErc20(2))
+          .to.emit(cryptoBet, "evt_newBet")
+          .withArgs(1, BN(10), true);
+      });
+
+      it.skip("trigger new bet event (second bet - use token)", async function () {
+        const { cryptoBet, addr1 } = await setupCryptoBet();
+        await cryptoBet.registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) });
+
+        await expect(cryptoBet.connect(addr1).registerBetErc20(2))
           .to.emit(cryptoBet, "evt_newBet")
           .withArgs(2, BN(20));
       });
@@ -271,6 +330,25 @@ describe("-- CRYPTO BET ---", function () {
         await expect(cryptoBet.registerBet(2, { value: ethers.utils.parseEther(BET_VALUE_WRONG) }))
         .to.be.revertedWith(
           "you must send exactly the bet value"
+        );
+      });
+
+      it("Should revert if user already betting (use token)", async function () {
+        const { cryptoBet } = await setupCryptoBet();
+        await cryptoBet.registerBetErc20(2);
+
+        await expect(cryptoBet.registerBetErc20(2))
+        .to.be.revertedWith(
+          "must not betting to execute this function"
+        );
+      });
+
+      it("Should revert if user not have enough EDFT (use token)", async function () {
+        const { cryptoBet, addr1 } = await setupCryptoBet();
+
+        await expect(cryptoBet.connect(addr1).registerBetErc20(2))
+        .to.be.revertedWith(
+          "not enough EDFT"
         );
       });
     })

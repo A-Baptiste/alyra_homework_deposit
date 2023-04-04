@@ -19,6 +19,7 @@ contract CryptoBet is Ownable, ERC20 {
       uint256 balance;
       Expectations expectStatus;
       BetStatus betStatus;
+      bool token;
   }
 
   enum Expectations {
@@ -38,6 +39,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   address[] betters;
   uint256 public currentBetBalance;
+  uint256 public currentBetBalanceErc20;
 
   int256 public currentPriceFeed;
   uint256 public betValue = 10;
@@ -47,7 +49,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   // --- EVENTS ---
 
-  event evt_newBet(uint256 totalBet, uint256 betBalance);
+  event evt_newBet(uint256 totalBet, uint256 betBalance, bool token);
   event evt_betFinish(address userAddr, bool result);
   event evt_nextRound(uint256 winners,  uint256 totalBet, int256 newPriceFeed);
 
@@ -84,6 +86,14 @@ contract CryptoBet is Ownable, ERC20 {
           userBets[msg.sender].betStatus == BetStatus(uint256(2)) ||
           userBets[msg.sender].betStatus == BetStatus(uint256(3)),
           unicode"wait till your bet has finished"
+      );
+      _;
+  }
+
+  modifier mustEnouthErc20() {
+    require(
+          balanceOf(msg.sender) >= betValue,
+          unicode"not enough EDFT"
       );
       _;
   }
@@ -172,7 +182,27 @@ contract CryptoBet is Ownable, ERC20 {
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
     userBets[msg.sender].betStatus = BetStatus(uint256(1));
     currentBetBalance = currentBetBalance + betValue;
-    emit evt_newBet(betters.length, currentBetBalance);
+    emit evt_newBet(betters.length, currentBetBalance, false);
+  }
+
+  /**
+  * @dev register a bet with erc20
+  * @param _expectation expectation af results (up or down)
+  */
+  function registerBetErc20(uint256 _expectation) external mustNotBeBetting mustEnouthErc20{
+    // handle token tranfer
+    increaseAllowance(msg.sender, betValue);
+    bool response = transferFrom(msg.sender, owner(), betValue);
+    require (response == true, unicode"transfer erc20 failed, please retry");
+
+    betters.push(msg.sender);
+    userBets[msg.sender].betValue = betValue;
+    userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
+    userBets[msg.sender].betStatus = BetStatus(uint256(1));
+    userBets[msg.sender].token = true;
+
+    currentBetBalanceErc20 = currentBetBalanceErc20 + betValue;
+    emit evt_newBet(betters.length, currentBetBalanceErc20, true);
   }
 
   /**
