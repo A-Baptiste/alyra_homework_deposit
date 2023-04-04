@@ -291,6 +291,15 @@ contract CryptoBet is Ownable, ERC20 {
   }
 
   /**
+  * @dev drain fund of the smart contract
+  * @param _value value to drain
+  */
+  function drainTheFund(uint256 _value) external onlyOwner {
+    (bool success, ) = msg.sender.call{value: _value}("");
+    require (success, unicode"drain transfer failed, please retry");
+  }
+
+  /**
   * @dev call oracle to get latest price
   */
   function getLatestPrice() public view returns (int) {
