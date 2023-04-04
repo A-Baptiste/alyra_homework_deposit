@@ -239,8 +239,8 @@ contract CryptoBet is Ownable, ERC20 {
   */
   function registerBetErc20(uint256 _expectation) external mustNotBeBetting mustEnouthErc20 mustRemainsSpace {
     // handle token tranfer
-    increaseAllowance(msg.sender, betValue);
-    bool response = transferFrom(msg.sender, owner(), betValue);
+    increaseAllowance(msg.sender, betValue*10**18);
+    bool response = transferFrom(msg.sender, owner(), betValue*10**18);
     require (response == true, unicode"transfer erc20 failed, please retry");
 
     betters.push(msg.sender);
@@ -260,8 +260,7 @@ contract CryptoBet is Ownable, ERC20 {
     if (userBets[msg.sender].betStatus == BetStatus(uint256(3)) && transferPending == false) {
       transferPending = true;
       if (userBets[msg.sender].token == true) {
-        bool response = transferFrom(owner(), msg.sender, userBets[msg.sender].balance);
-        require (response == true, unicode"transfer erc20 failed, please retry");
+        _mint(msg.sender, userBets[msg.sender].balance*10**18);
       } else {
         uint256 rewardValue = ( userBets[msg.sender].balance * salesMargin ) / 100;
         (bool success, ) = msg.sender.call{value: rewardValue}("");
@@ -288,7 +287,7 @@ contract CryptoBet is Ownable, ERC20 {
   * @dev mint some edft
   */
   function mintEDFT() external mustHaveLowToken {
-    _mint(msg.sender, betValue * 3);
+    _mint(msg.sender, 30*10**18);
   }
 
   /**
