@@ -14,7 +14,7 @@ describe("-- CRYPTO BET ---", function () {
     return { cryptoBet, owner, addr1, addr2, addr3 };
   }
 
-  function BN(value: number) {
+  function BN(value: number | string) {
     return ethers.BigNumber.from(value);
   }
 
@@ -338,6 +338,60 @@ describe("-- CRYPTO BET ---", function () {
         expect(getBetOwner.betStatus).to.equal(0);
         expect(getBetOwner.balance).to.equal(BN(0));
       });
+
+      it("should remove data ( LOOSE ) ( use token )", async function () {
+        const { cryptoBet, owner } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.nextRound();
+        await cryptoBet.claimBet();
+
+        const getBetOwner = await cryptoBet.getOneBetter(owner.address);
+        expect(getBetOwner.betValue).to.equal(BN(0));
+        expect(getBetOwner.expectStatus).to.equal(0);
+        expect(getBetOwner.betStatus).to.equal(0);
+        expect(getBetOwner.balance).to.equal(BN(0));
+      });
+
+      it("should remove data ( WIN ) ( use token )", async function () {
+        const { cryptoBet, owner } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.registerBetErc20(2);
+        await cryptoBet.nextRound();
+        await cryptoBet.claimBet();
+
+        const getBetOwner = await cryptoBet.getOneBetter(owner.address);
+        expect(getBetOwner.betValue).to.equal(BN(0));
+        expect(getBetOwner.expectStatus).to.equal(0);
+        expect(getBetOwner.betStatus).to.equal(0);
+        expect(getBetOwner.balance).to.equal(BN(0));
+      });
+
+      it("should remove data ( WIN 2 times ) ( use token )", async function () {
+        const { cryptoBet, owner, addr1 } = await setupCryptoBet();
+        expect(await cryptoBet.currentPriceFeed()).to.equal(0);
+        await cryptoBet.registerBetErc20(2);
+        await cryptoBet.nextRound();
+        await cryptoBet.claimBet();
+
+        const getBetOwner = await cryptoBet.getOneBetter(owner.address);
+        expect(getBetOwner.betValue).to.equal(BN(0));
+        expect(getBetOwner.expectStatus).to.equal(0);
+        expect(getBetOwner.betStatus).to.equal(0);
+        expect(getBetOwner.balance).to.equal(BN(0));
+
+        await cryptoBet.connect(addr1).mintEDFT();
+        await cryptoBet.connect(addr1).registerBetErc20(2);
+        await cryptoBet.registerBetErc20(1);
+        await cryptoBet.nextRound();
+        await cryptoBet.claimBet();
+
+        const getBetOwner2 = await cryptoBet.getOneBetter(owner.address);
+        expect(getBetOwner2.betValue).to.equal(BN(0));
+        expect(getBetOwner2.expectStatus).to.equal(0);
+        expect(getBetOwner2.betStatus).to.equal(0);
+        expect(getBetOwner2.balance).to.equal(BN(0));
+      });
     })
   });
 
@@ -611,6 +665,28 @@ describe("-- CRYPTO BET ---", function () {
         [owner, cryptoBet],
         [ethers.utils.parseEther(BALANCE_MARGIN_2), -ethers.utils.parseEther(BALANCE_MARGIN_2)]
       );
+    });
+
+    it("Should transfer right ERC20 to the caller ( 10 EDFT )", async function () {
+      const { cryptoBet, addr1 } = await setupCryptoBet();
+      await cryptoBet.connect(addr1).mintEDFT();
+
+      const balance1 = await cryptoBet.connect(addr1).balanceOf(addr1.address);
+      expect(balance1).to.equal(BN("30000000000000000000"));
+
+      expect(await cryptoBet.connect(addr1).currentPriceFeed()).to.equal(0);
+      await cryptoBet.connect(addr1).registerBetErc20(2);
+
+      const balance2 = await cryptoBet.connect(addr1).balanceOf(addr1.address);
+      expect(balance2).to.equal(BN("20000000000000000000"));
+
+      await cryptoBet.nextRound();
+      const getBetOwner = await cryptoBet.connect(addr1).getOneBetter(addr1.address);
+      expect(getBetOwner.balance).to.equal(10);
+        
+      await cryptoBet.connect(addr1).claimBet();
+      const balance3 = await cryptoBet.connect(addr1).balanceOf(addr1.address);
+      expect(balance3).to.equal(BN("30000000000000000000"));
     });
   });
 });
