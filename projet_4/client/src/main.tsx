@@ -1,19 +1,19 @@
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { WagmiConfig, createClient, configureChains } from 'wagmi';
-import { hardhat, goerli } from 'wagmi/chains';
+import { hardhat, sepolia } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import {
   getDefaultWallets,
   RainbowKitProvider,
-  lightTheme,
+  darkTheme
 } from '@rainbow-me/rainbowkit';
 import './index.css';
 import '@rainbow-me/rainbowkit/styles.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 const { chains, provider } = configureChains(
-  [hardhat, goerli],
+  [hardhat, sepolia],
   [publicProvider()]
 );
 
@@ -32,7 +32,8 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <WagmiConfig client={wagmiClient}>
     <RainbowKitProvider
       chains={chains}
-      theme={lightTheme({
+      modalSize="compact"
+      theme={darkTheme({
         accentColor: '#00AE53',
       })}
     >
