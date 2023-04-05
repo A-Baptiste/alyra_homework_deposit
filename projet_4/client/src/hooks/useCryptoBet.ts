@@ -10,6 +10,7 @@ const BET_VALUE = "0.000000000000000010" // 10 wei
 export function useCryptoBet() {
   const [userStatus, setUserStatus] = useState<string>("guest");
   const [bettersFromEvt, setBettersFromEvt] = useState<string[]>([]);
+  const [userResult, setUserResult] = useState<string>("noResult");
 
   const { data: signerData } = useSigner();
   const { address } = useAccount();
@@ -56,7 +57,7 @@ export function useCryptoBet() {
     abi: artifact.abi,
     eventName: 'evt_nextRound',
     listener(node, label, owner) {
-      // console.log("evt_nextRound", node, label, owner);
+      console.log("evt_nextRound", node, label, owner);
     },
   });
 
@@ -65,7 +66,15 @@ export function useCryptoBet() {
     abi: artifact.abi,
     eventName: 'evt_betFinish',
     listener(node, label, owner) {
-      console.log("evt_betFinish", node, label, owner);
+      //@ts-ignore
+      if (owner.args.userAddr == address) {
+        //@ts-ignore
+        if (owner.args.result) {
+          setUserResult("win");
+        } else {
+          setUserResult("los");
+        }
+      }
     },
   });
 
@@ -172,6 +181,15 @@ export function useCryptoBet() {
     return response;
   };
 
+  const handleClaimReward = async () => {
+    console.log('CLAIM BET REWARD');
+    let response;
+    if (cryptoBet) {
+      response = await cryptoBet.claimBet();
+    }
+    return response;
+  };
+
   // -------------------------------------------------------- FUNCTIONS
 
   // trigger functions
@@ -189,10 +207,12 @@ export function useCryptoBet() {
     edftBalance,
     userStatus,
     userBet,
+    userResult,
     currentPriceFeed,
     handleNextRound,
     handleRegisterBet,
     getLastRound,
+    handleClaimReward,
     bettersFromEvt
   }
 };
