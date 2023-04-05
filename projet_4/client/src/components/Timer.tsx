@@ -4,9 +4,6 @@ import { useCryptoBet } from '../hooks/useCryptoBet';
 import { useEffect, useState } from 'react';
 
 function Timer() {
-  const { isConnected } = useAccount();
-  const { userStatus } = useCryptoBet();
-
   const currentDate = new Date();
   const TIME = 60;
 
