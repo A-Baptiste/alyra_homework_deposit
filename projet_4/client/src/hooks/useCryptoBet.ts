@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAccount, useContractEvent, useContractRead } from 'wagmi';
+import { useAccount, useBalance, useContractEvent, useContractRead } from 'wagmi';
 import { useContract, useSigner } from 'wagmi';
 import artifact from '../contracts/CryptoBet.json';
 import { toast } from 'react-toastify';
@@ -21,10 +21,17 @@ export function useCryptoBet() {
     signerOrProvider: signerData,
   });
 
-  const { data: votingOwner } = useContractRead({
-    address: import.meta.env.VITE_VOTING_ADDR,
+  const { data: cryptoBetOwner } = useContractRead({
+    address: import.meta.env.VITE_CRYPTOBET_ADDR,
     abi: artifact.abi,
     functionName: 'owner',
+  });
+
+  const { data: edftBalance } = useContractRead({
+    address: import.meta.env.VITE_CRYPTOBET_ADDR,
+    abi: artifact.abi,
+    functionName: 'balanceOf',
+    args: [address],
   });
 
   // -------------------------------------------------------- EVENTS LISTENERS
@@ -82,7 +89,10 @@ export function useCryptoBet() {
   // -------------------------------------------------------- FUNCTIONS
 
   const getUserStatus = async () => {
-    if (votingOwner === address) {
+    // console.log('user status test');
+    // console.log(cryptoBetOwner)
+    // console.log(address)
+    if (cryptoBetOwner === address) {
       setUserStatus('owner');
     }
   };
@@ -107,5 +117,12 @@ export function useCryptoBet() {
     getUserStatus();
   }, [address]);
 
-  return { address, userStatus, handleNextRound, handleRegisterBet, getLastRound }
+  return {
+    address,
+    edftBalance,
+    userStatus,
+    handleNextRound,
+    handleRegisterBet,
+    getLastRound
+  }
 };
