@@ -398,11 +398,11 @@ describe("-- CRYPTO BET ---", function () {
   describe("-> Events :", function () {
     describe("evt_newBet :", function () {
       it("trigger new bet event (first bet)", async function () {
-        const { cryptoBet } = await setupCryptoBet();
+        const { cryptoBet, owner } = await setupCryptoBet();
 
         await expect(cryptoBet.registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) }))
           .to.emit(cryptoBet, "evt_newBet")
-          .withArgs(1, BN(10), false);
+          .withArgs(owner.address, 1, BN(10), false);
       });
 
       it("trigger new bet event (second bet)", async function () {
@@ -411,15 +411,15 @@ describe("-- CRYPTO BET ---", function () {
 
         await expect(cryptoBet.connect(addr1).registerBet(2, { value: ethers.utils.parseEther(BET_VALUE) }))
           .to.emit(cryptoBet, "evt_newBet")
-          .withArgs(2, BN(20), false);
+          .withArgs(addr1.address, 2, BN(20), false);
       });
 
       it("trigger new bet event (first bet - use token)", async function () {
-        const { cryptoBet } = await setupCryptoBet();
+        const { cryptoBet, owner } = await setupCryptoBet();
 
         await expect(cryptoBet.registerBetErc20(2))
           .to.emit(cryptoBet, "evt_newBet")
-          .withArgs(1, BN(10), true);
+          .withArgs(owner.address, 1, BN(10), true);
       });
 
       it("trigger new bet event (second bet - use token)", async function () {
@@ -429,7 +429,7 @@ describe("-- CRYPTO BET ---", function () {
         await cryptoBet.connect(addr1).mintEDFT();
         await expect(cryptoBet.connect(addr1).registerBetErc20(2))
           .to.emit(cryptoBet, "evt_newBet")
-          .withArgs(2, BN(20), true);
+          .withArgs(addr1.address, 2, BN(20), true);
       });
     })
 
