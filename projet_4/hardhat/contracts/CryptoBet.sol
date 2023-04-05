@@ -50,7 +50,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   // --- EVENTS ---
 
-  event evt_newBet(uint256 totalBet, uint256 betBalance, bool token);
+  event evt_newBet(address userAddr, uint256 totalBet, uint256 betBalance, bool token);
   event evt_betFinish(address userAddr, bool result);
   event evt_nextRound(
     uint256 winners,
@@ -230,7 +230,7 @@ contract CryptoBet is Ownable, ERC20 {
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
     userBets[msg.sender].betStatus = BetStatus(uint256(1));
     currentBetBalance = currentBetBalance + betValue;
-    emit evt_newBet(betters.length, currentBetBalance, false);
+    emit evt_newBet(msg.sender, betters.length, currentBetBalance, false);
   }
 
   /**
@@ -250,7 +250,7 @@ contract CryptoBet is Ownable, ERC20 {
     userBets[msg.sender].token = true;
 
     currentBetBalanceErc20 = currentBetBalanceErc20 + betValue;
-    emit evt_newBet(betters.length, currentBetBalanceErc20, true);
+    emit evt_newBet(msg.sender, betters.length, currentBetBalanceErc20, true);
   }
 
   /**
