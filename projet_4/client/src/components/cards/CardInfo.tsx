@@ -8,7 +8,6 @@ interface Props {
 
 function CardInfo({ useToken }: Props) {
   const { currentPriceFeed } = useCryptoBet();
-  console.log("cpf ", getPriceFeedInDollar(currentPriceFeed));
   const betValue = "10";
 
   return (
