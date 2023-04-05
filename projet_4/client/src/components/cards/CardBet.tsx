@@ -39,29 +39,19 @@ function CardBet({ useToken }: Props) {
     
   }, [address, userBet]);
 
-  const betValue = "10";
-
   return (
     <div className="card w-96 shadow-xl bg-[#2F2C2C]">
       <div className="card-body">
         <h2 className="card-title">Pariez !</h2>
         <div className='card bg-base-100 h-full'>
           <div className="card-body flex flex-col items-center  justify-center">
-            <div className='mb-5 flex flex-col items-center'>
-              <div>Mise obligatoire :</div>
-              {useToken ?
-                <div className='text-primary'>{10} EDFT</div>
-              :
-                <div className='text-primary'>{betValue} Wei</div>
-              }
-            </div>
             { status === "log" && 
-              <div className='h-full text-error font-bold text-center'>
+              <div className='h-full flex items-center text-error font-bold text-center'>
                 Veuillez connecter votre wallet !
               </div>
             }
             { status === "betted" && 
-              <div className='h-full text-primary font-bold text-center'>
+              <div className='h-full flex items-center text-primary font-bold text-center'>
                 Vous avec parié pour cette session !
               </div>
             }
