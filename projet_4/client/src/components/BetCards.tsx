@@ -23,7 +23,7 @@ function BetCards({ useToken }: Props) {
     </div>
     <div className="flex justify-center gap-5 mb-5">
       <CardLast useToken={useToken}/>
-      <CardInfo />
+      <CardInfo useToken={useToken}/>
       <CardBet useToken={useToken}/>
     </div>
   </>

@@ -1,9 +1,15 @@
 import { useAccount } from 'wagmi';
 import { useCryptoBet } from '../../hooks/useCryptoBet';
+import { getPriceFeedInDollar } from '../../utils/balances';
 
-function CardInfo() {
-  const { isConnected } = useAccount();
-  const { handleNextRound, handleRegisterBet, getLastRound } = useCryptoBet();
+interface Props {
+  useToken: boolean;
+}
+
+function CardInfo({ useToken }: Props) {
+  const { currentPriceFeed } = useCryptoBet();
+  console.log("cpf ", getPriceFeedInDollar(currentPriceFeed));
+  const betValue = "10";
 
   return (
     <div className="card w-96 shadow-xl bg-[#2F2C2C]">
@@ -13,17 +19,15 @@ function CardInfo() {
           <div className="card-body flex flex-col items-center justify-center">
             <div className='mb-5'>Pari en cours ...</div>
             <div className='text-3xl text-primary font-bold'>
-              $ 1 879.567
+              $ {getPriceFeedInDollar(currentPriceFeed)}
             </div>
-            <div className='flex gap-5 mt-5'>
-              <div className="badge badge-success badge-outline	 gap-2">
-                <span>&#8593;</span>
-                12
-              </div>
-              <div className="badge badge-error badge-outline	 gap-2">
-                <span>&#8595;</span>
-                24
-              </div>
+            <div className='mt-5 flex flex-col items-center'>
+              <div>Mise obligatoire :</div>
+              {useToken ?
+                <div className='text-primary'>{10} EDFT</div>
+              :
+                <div className='text-primary'>{betValue} Wei</div>
+              }
             </div>
           </div>
         </div>
