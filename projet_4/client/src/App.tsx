@@ -3,15 +3,17 @@ import NavBar from './components/NavBar'
 import Timer from './components/Timer'
 import OwnerButtons from './components/OwnerButtons';
 import BetCard from './components/BetCards';
+import SwitchMoney from './components/SwitchMoney';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [useToken, setUseToken] = useState<boolean>(false);
 
   return (
     <div>
      <NavBar />
      <Timer />
-     <BetCard />
+     <SwitchMoney changeUseToken={setUseToken}/>
+     <BetCard useToken={useToken} />
      <OwnerButtons />
     </div>
   )
