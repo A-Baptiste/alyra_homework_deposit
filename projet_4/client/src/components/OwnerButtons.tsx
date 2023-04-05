@@ -3,7 +3,7 @@ import { useCryptoBet } from '../hooks/useCryptoBet';
 
 function OwnerButtons() {
   const { isConnected } = useAccount();
-  const { handleNextRound, handleRegisterBet, getLastRound } = useCryptoBet();
+  const { handleNextRound, getLastRound } = useCryptoBet();
 
   return (
     <div className="navbar flex flex-col bg-[#2F2C2C] py-5">
@@ -17,12 +17,12 @@ function OwnerButtons() {
         >force next round</button>
         <button
           className="btn btn-error"
-          onClick={handleRegisterBet}
-        >register bet</button>
-        <button
-          className="btn btn-error"
           onClick={getLastRound}
         >get last round</button>
+         {/* <button
+          className="btn btn-error"
+          onClick={}
+        >get betters</button> */}
       </div>
     </div>
   );
