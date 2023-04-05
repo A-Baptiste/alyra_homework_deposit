@@ -1,7 +1,11 @@
 import { useAccount } from 'wagmi';
 import { useCryptoBet } from '../../hooks/useCryptoBet';
 
-function CardLast() {
+interface Props {
+  useToken: boolean;
+}
+
+function CardLast({ useToken }: Props) {
   const { isConnected } = useAccount();
   const { handleNextRound, handleRegisterBet, getLastRound } = useCryptoBet();
 
