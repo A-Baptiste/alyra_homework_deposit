@@ -14,7 +14,7 @@ export function useCryptoBet() {
   const { data: signerData } = useSigner();
   const { address } = useAccount();
 
-    // -------------------------------------------------------- CONTRACT GETTERS
+  // -------------------------------------------------------- CONTRACT GETTERS
 
   const cryptoBet = useContract({
     address: import.meta.env.VITE_CRYPTOBET_ADDR,
@@ -42,6 +42,13 @@ export function useCryptoBet() {
     args: [address],
   });
 
+  const currentPriceFeed = useContractRead({
+    address: import.meta.env.VITE_CRYPTOBET_ADDR,
+    abi: artifact.abi,
+    functionName: 'currentPriceFeed',
+    watch: true,
+  });
+
   // -------------------------------------------------------- EVENTS LISTENERS
 
   useContractEvent({
@@ -49,7 +56,7 @@ export function useCryptoBet() {
     abi: artifact.abi,
     eventName: 'evt_nextRound',
     listener(node, label, owner) {
-      console.log("evt_nextRound", node, label, owner);
+      // console.log("evt_nextRound", node, label, owner);
     },
   });
 
@@ -182,6 +189,7 @@ export function useCryptoBet() {
     edftBalance,
     userStatus,
     userBet,
+    currentPriceFeed,
     handleNextRound,
     handleRegisterBet,
     getLastRound,
