@@ -12,7 +12,7 @@ function OwnerButtons() {
         <div className='text-lg font-bold mt-3'>
           Espace propiétaire
         </div>
-        <div className='flex justify-center items-center gap-5'>
+        <div className='flex justify-center items-center gap-5 mb-3'>
           <span className="flex flex-col items-center w-52">
             <span>Balance du contrat</span>
             <div>
