@@ -57,7 +57,7 @@ export function useCryptoBet() {
     abi: artifact.abi,
     eventName: 'evt_nextRound',
     listener(node, label, owner) {
-      console.log("evt_nextRound", node, label, owner);
+      // console.log("evt_nextRound", node, label, owner);
     },
   });
 
@@ -91,8 +91,9 @@ export function useCryptoBet() {
   // -------------------------------------------------------- EVENTS FETCHERS
 
   async function getLastRound() {
-    if (!cryptoBet) return;
+    if (!cryptoBet || !address) return;
 
+    console.log('- TRY GET LAST ROUND -');
     try {
       const cryptoBetFilter = cryptoBet.filters.evt_nextRound();
       if (!cryptoBetFilter) return;
@@ -101,13 +102,14 @@ export function useCryptoBet() {
       );
       if (!cryptoBetEvents) return;
 
-      cryptoBetEvents.map((elem) => {
-        //@ts-ignore
-        const roundTimestamp = elem.args.startedtAt.toNumber();
-        console.log('round time stamp ', roundTimestamp)
-        var roundDate = new Date(roundTimestamp);
-        console.log('round', roundDate);
-      })
+      return(cryptoBetEvents[cryptoBetEvents.length - 1])
+      // cryptoBetEvents.map((elem) => {
+      //   //@ts-ignore
+      //   const roundTimestamp = elem.args.startedtAt.toNumber();
+      //   console.log('round time stamp ', roundTimestamp)
+      //   var roundDate = new Date(roundTimestamp);
+      //   console.log('round', roundDate);
+      // })
       // console.log("get rounds ", cryptoBetEvents);
 
       // const fetchedVoters = voterRegisteredEvents.map(
@@ -178,6 +180,7 @@ export function useCryptoBet() {
         response = await cryptoBet.registerBet(expectation, { value: ethers.utils.parseEther(BET_VALUE) });
       }
     }
+
     return response;
   };
 
@@ -186,6 +189,15 @@ export function useCryptoBet() {
     let response;
     if (cryptoBet) {
       response = await cryptoBet.claimBet();
+    }
+    return response;
+  };
+
+  const handleMintEdft = async () => {
+    console.log('MINT EDFT');
+    let response;
+    if (cryptoBet) {
+      response = await cryptoBet.mintEDFT();
     }
     return response;
   };
@@ -213,6 +225,7 @@ export function useCryptoBet() {
     handleRegisterBet,
     getLastRound,
     handleClaimReward,
+    handleMintEdft,
     bettersFromEvt
   }
 };
