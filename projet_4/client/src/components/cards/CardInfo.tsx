@@ -17,8 +17,9 @@ function CardInfo({ useToken }: Props) {
         <div className='card bg-base-100 h-full'>
           <div className="card-body flex flex-col items-center justify-center">
             <div className='mb-5'>Pari en cours ...</div>
-            <div className='text-3xl text-primary font-bold'>
-              $ {getPriceFeedInDollar(currentPriceFeed.data)}
+            <div className='flex flex-col items-center'>
+              <div className='text-3xl text-primary font-bold'>$ {getPriceFeedInDollar(currentPriceFeed.data)}</div>
+              <div>pour 1 ETH</div>
             </div>
             <div className='mt-5 flex flex-col items-center'>
               <div>Mise obligatoire :</div>

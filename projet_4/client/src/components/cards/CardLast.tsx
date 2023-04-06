@@ -56,7 +56,6 @@ function CardLast({ useToken }: Props) {
   const handleLastRoundData = async () => {
     //@ts-ignore
     const response = await getLastRound();
-    console.log("last round ", response);
     if (response && response.args?.newPriceFeed.toString() != lastPriceFeed) {
       setResultData({
         lastWinnersETH: response.args?.winners.toString(),
@@ -64,7 +63,6 @@ function CardLast({ useToken }: Props) {
         lastLosersETH: response.args?.loosers.toString(),
         lastLosersEDFT: response.args?.loosersErc20.toString(),
       })
-      console.log("pf", response.args?.newPriceFeed);
       setLastPriceFeed(response.args?.newPriceFeed);
     }
   };
@@ -89,8 +87,9 @@ function CardLast({ useToken }: Props) {
         <div className='card bg-base-100 h-full'>
           <div className="card-body flex flex-col gap-5 items-center justify-center">
             <div>Résultats</div>
-            <div className='text-3xl text-primary font-bold'>
-              $ {getPriceFeedInDollar(lastPriceFeed)}
+            <div className='flex flex-col items-center'>
+              <div className='text-3xl text-primary font-bold'>$ {getPriceFeedInDollar(lastPriceFeed)}</div>
+              <div>pour 1 ETH</div>
             </div>
             <div className='grid grid-cols-4 gap-1 w-full'>
                 <div className='text-sm'>ETH</div>
