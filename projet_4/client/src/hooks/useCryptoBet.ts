@@ -5,7 +5,8 @@ import artifact from '../contracts/CryptoBet.json';
 import { toast } from 'react-toastify';
 import { ethers } from 'ethers';
 
-const BET_VALUE = "0.000000000000000010" // 10 wei
+// const BET_VALUE = "0.000000000000000010" // 10 wei
+const BET_VALUE = "1" // 1 eth
 
 export function useCryptoBet() {
   const [userStatus, setUserStatus] = useState<string>("guest");
