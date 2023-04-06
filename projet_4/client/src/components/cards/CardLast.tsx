@@ -2,14 +2,30 @@ import { useAccount } from 'wagmi';
 import { useCryptoBet } from '../../hooks/useCryptoBet';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { getPriceFeedInDollar } from '../../utils/balances';
+import { BigNumber } from 'ethers';
 
 interface Props {
   useToken: boolean;
 }
 
+interface ResultData {
+  lastWinnersETH: string;
+  lastWinnersEDFT: string;
+  lastLosersETH: string;
+  lastLosersEDFT: string;
+}
+
 function CardLast({ useToken }: Props) {
-  const { userBet, userResult, handleClaimReward } = useCryptoBet();
+  const { address, userBet, userResult, handleClaimReward, getLastRound} = useCryptoBet();
   const [hasFinish, setHasFinish] = useState<string>("unknow");
+  const [lastPriceFeed, setLastPriceFeed] = useState<BigNumber>();
+  const [resultData, setResultData] = useState<ResultData>({
+    lastWinnersETH: "-",
+    lastWinnersEDFT: "-",
+    lastLosersETH: "-",
+    lastLosersEDFT: "-",
+  });
 
   useEffect(() => {
     if ( userBet && userBet.data && hasFinish !== "claimed" ) {
@@ -22,7 +38,7 @@ function CardLast({ useToken }: Props) {
         setHasFinish("loose");
       }
     }
-  }, [userBet, userResult])
+  }, [userBet])
 
   useEffect(() => {
     if (userResult === "win") {
@@ -32,6 +48,26 @@ function CardLast({ useToken }: Props) {
       setHasFinish("loose");
     }
   }, [userResult])
+
+  useEffect(() => {
+    handleLastRoundData();
+  })
+
+  const handleLastRoundData = async () => {
+    //@ts-ignore
+    const response = await getLastRound();
+    console.log("last round ", response);
+    if (response && response.args?.newPriceFeed.toString() != lastPriceFeed) {
+      setResultData({
+        lastWinnersETH: response.args?.winners.toString(),
+        lastWinnersEDFT: response.args?.winnersErc20.toString(),
+        lastLosersETH: response.args?.loosers.toString(),
+        lastLosersEDFT: response.args?.loosersErc20.toString(),
+      })
+      console.log("pf", response.args?.newPriceFeed);
+      setLastPriceFeed(response.args?.newPriceFeed);
+    }
+  };
 
   const handleClaimBetFromCard = async () => {
     const response = await handleClaimReward();
@@ -53,22 +89,38 @@ function CardLast({ useToken }: Props) {
         <div className='card bg-base-100 h-full'>
           <div className="card-body flex flex-col gap-5 items-center justify-center">
             <div>Résultats</div>
-            <div className='flex gap-5'>
-              <div className='flex flex-col items-center'>
-                <div className='text-sm'>Gagnants</div>
-                <div className="badge badge-success badge-outline gap-2">
-                  12
-                </div>
-              </div>
-              <div className='flex flex-col items-center'>
-                <div className='text-sm'>Perdants</div>
-                <div className="badge badge-error badge-outline gap-2">
-                  32
-                </div>
-              </div>
-            </div>
             <div className='text-3xl text-primary font-bold'>
-              $ 1 923.347
+              $ {getPriceFeedInDollar(lastPriceFeed)}
+            </div>
+            <div className='grid grid-cols-4 gap-1 w-full'>
+                <div className='text-sm'>ETH</div>
+                <div className="badge badge-success badge-outline gap-2">
+                  {resultData?.lastWinnersETH}
+                </div>
+                <div className="badge badge-error badge-outline gap-2">
+                  {resultData?.lastLosersETH}
+                </div>
+                <div className="badge badge-outline gap-2">
+                  {resultData?.lastWinnersETH !== "-" ?
+                    parseInt(resultData?.lastWinnersETH) + parseInt(resultData?.lastLosersETH)
+                    :
+                    "-"
+                  }
+                </div>
+                <div className='text-sm'>EDFT</div>
+                <div className="badge badge-success badge-outline gap-2">
+                  {resultData?.lastWinnersEDFT}
+                </div>
+                <div className="badge badge-error badge-outline gap-2">
+                  {resultData?.lastLosersEDFT}
+                </div>
+                <div className="badge badge-outline gap-2">
+                  {resultData?.lastWinnersEDFT !== "-" ?
+                    parseInt(resultData?.lastWinnersEDFT) + parseInt(resultData?.lastLosersEDFT)
+                    :
+                    "-"
+                  }
+                </div>
             </div>
             {hasFinish === "reward" && (
               <button
