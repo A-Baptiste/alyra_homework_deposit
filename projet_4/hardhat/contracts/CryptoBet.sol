@@ -82,7 +82,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   modifier mustSendRightValue() {
       require(
-          msg.value == betValue,
+          msg.value == 1 ether,
           unicode"you must send exactly the bet value"
       );
       _;
@@ -226,10 +226,10 @@ contract CryptoBet is Ownable, ERC20 {
   */
   function registerBet(uint256 _expectation) external payable mustNotBeBetting mustSendRightValue mustRemainsSpace {
     betters.push(msg.sender);
-    userBets[msg.sender].betValue = betValue;
+    userBets[msg.sender].betValue = 1 ether;
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
     userBets[msg.sender].betStatus = BetStatus(uint256(1));
-    currentBetBalance = currentBetBalance + betValue;
+    currentBetBalance = currentBetBalance + 1 ether;
     emit evt_newBet(msg.sender, betters.length, currentBetBalance, false);
   }
 
