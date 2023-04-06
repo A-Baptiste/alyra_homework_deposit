@@ -1,29 +1,45 @@
-import { useAccount } from 'wagmi';
 import { useCryptoBet } from '../hooks/useCryptoBet';
 
 function OwnerButtons() {
-  const { isConnected } = useAccount();
-  const { handleNextRound, getLastRound } = useCryptoBet();
+  const { handleNextRound, contractBalance, userStatus } = useCryptoBet();
+
+  console.log("contractBalance", contractBalance);
 
   return (
-    <div className="navbar flex flex-col bg-[#2F2C2C] py-5">
-      <div className='pb-3'>
-        Espace propiétaire
-      </div>
-      <div className='flex gap-5'>
+    <div className="flex justify-center items-center flex-col bg-[#2F2C2C] gap-3">
+      {userStatus === "owner" &&
+      <>
+        <div className='text-lg font-bold mt-3'>
+          Espace propiétaire
+        </div>
+        <span className="flex flex-col items-center">
+          <span>Balance du contrat</span>
+          <div>
+          <b className='text-primary'>
+            {contractBalance?.formatted}
+          </b>
+          &nbsp;ETH
+          </div>
+        </span>
+        <div className='flex items-center gap-5'>
+          <input
+            className='input input-bordered input-primary input-sm'
+            type="number"
+            placeholder='00,0 ETH'
+          />
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => console.log("click")}
+          >Transférer</button>
+        </div>
         <button
-          className="btn btn-error"
+          className="btn btn-error btn-sm mb-3"
           onClick={handleNextRound}
-        >force next round</button>
-        <button
-          className="btn btn-error"
-          onClick={getLastRound}
-        >get last round</button>
-         {/* <button
-          className="btn btn-error"
-          onClick={}
-        >get betters</button> */}
-      </div>
+        >
+          demo: force next round
+        </button>
+      </>
+      }
     </div>
   );
 }
