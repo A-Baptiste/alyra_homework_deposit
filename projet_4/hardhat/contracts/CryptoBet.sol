@@ -42,7 +42,6 @@ contract CryptoBet is Ownable, ERC20 {
   uint256 public currentBetBalanceErc20;
 
   int256 public currentPriceFeed;
-  uint256 public betValue = 10;
   uint256 salesMargin = 90; // means 10% margin
   bool transferPending; // avoid re-entrency
 
@@ -108,7 +107,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   modifier mustHaveLowToken() {
     require(
-          balanceOf(msg.sender) < betValue * 3,
+          balanceOf(msg.sender) < 30,
           unicode"you have too much EDFT"
       );
       _;
@@ -116,7 +115,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   modifier mustEnouthErc20() {
     require(
-          balanceOf(msg.sender) >= betValue,
+          balanceOf(msg.sender) >= 10,
           unicode"not enough EDFT"
       );
       _;
@@ -239,17 +238,17 @@ contract CryptoBet is Ownable, ERC20 {
   */
   function registerBetErc20(uint256 _expectation) external mustNotBeBetting mustEnouthErc20 mustRemainsSpace {
     // handle token tranfer
-    increaseAllowance(msg.sender, betValue*10**18);
-    bool response = transferFrom(msg.sender, owner(), betValue*10**18);
+    increaseAllowance(msg.sender, 10*10**18);
+    bool response = transferFrom(msg.sender, owner(), 10*10**18);
     require (response == true, unicode"transfer erc20 failed, please retry");
 
     betters.push(msg.sender);
-    userBets[msg.sender].betValue = betValue;
+    userBets[msg.sender].betValue = 10;
     userBets[msg.sender].expectStatus = Expectations(uint256(_expectation));
     userBets[msg.sender].betStatus = BetStatus(uint256(1));
     userBets[msg.sender].token = true;
 
-    currentBetBalanceErc20 = currentBetBalanceErc20 + betValue;
+    currentBetBalanceErc20 = currentBetBalanceErc20 + 10;
     emit evt_newBet(msg.sender, betters.length, currentBetBalanceErc20, true);
   }
 
