@@ -14,13 +14,6 @@ function BetCards({ useToken }: Props) {
 
   return (
   <>
-    <div>
-      {useToken ?
-        <div>Play with edft</div>
-        :
-        <div>Play with eth</div>
-      }
-    </div>
     <div className="flex justify-center gap-5 mb-5">
       <CardLast useToken={useToken}/>
       <CardInfo useToken={useToken}/>

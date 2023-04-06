@@ -7,7 +7,8 @@ export function getStringBalanceFromBigNumber(balance: any) {
 }
 
 export function getPriceFeedInDollar(price: any) {
-  const priceStr = price.data.toString();
+  if (!price) { return 0; }
+  const priceStr = price.toString();
   const units = priceStr.slice(0, 4)
   const fraction = priceStr.slice(5, 9)
   if (fraction === "") {
