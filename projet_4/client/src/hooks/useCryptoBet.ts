@@ -23,6 +23,10 @@ export function useCryptoBet() {
     signerOrProvider: signerData,
   });
 
+  const { data: contractBalance, isError, isLoading } = useBalance({
+    address: import.meta.env.VITE_CRYPTOBET_ADDR,
+  })
+
   const { data: cryptoBetOwner } = useContractRead({
     address: import.meta.env.VITE_CRYPTOBET_ADDR,
     abi: artifact.abi,
@@ -155,9 +159,7 @@ export function useCryptoBet() {
   // -------------------------------------------------------- FUNCTIONS
 
   const getUserStatus = async () => {
-    // console.log('user status test');
-    // console.log(cryptoBetOwner)
-    // console.log(address)
+
     if (cryptoBetOwner === address) {
       setUserStatus('owner');
     }
@@ -216,6 +218,7 @@ export function useCryptoBet() {
 
   return {
     address,
+    contractBalance,
     edftBalance,
     userStatus,
     userBet,
