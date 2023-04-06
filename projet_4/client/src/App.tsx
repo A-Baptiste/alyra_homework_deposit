@@ -17,7 +17,7 @@ function App() {
      <BetCard useToken={useToken} />
      <OwnerButtons />
      <ToastContainer
-        position="bottom-center"
+        position="bottom-right"
         autoClose={3000}
         hideProgressBar
         newestOnTop={false}

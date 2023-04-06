@@ -1,6 +1,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useCryptoBet } from '../hooks/useCryptoBet';
+import logo from '../assets/logo.png';
 
 function NavBar() {
   const { isConnected } = useAccount();
@@ -12,10 +13,11 @@ function NavBar() {
   };
 
   return (
-    <div className="navbar flex justify-between bg-[#2F2C2C]">
+    <div className="navbar flex justify-between bg-[#333333]">
       <button className='btn font-bold text-2xl'>
         easy<div className='text-primary'>dapp</div>
       </button>
+      {/* <img className="h-16 w-16" src={logo} alt="school logo" /> */}
       <div className="flex flex-col items-end">
         <div className="flex flex-col items-center">
           <ConnectButton />
