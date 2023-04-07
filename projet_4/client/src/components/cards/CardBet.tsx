@@ -51,9 +51,24 @@ function CardBet({ useToken }: Props) {
               </div>
             }
             { status === "betted" && 
-              <div className='h-full flex items-center text-primary font-bold text-center'>
-                Vous avec parié pour cette session !
-              </div>
+              <>
+                <div className='flex items-center text-primary font-bold text-center'>
+                  Vous avec parié pour cette session ! 
+                </div>
+                <div className='flex gap-3 mt-5'>
+                  Votre pari :
+                  {/* @ts-ignore */}
+                  { (userBet && userBet.data && userBet.data.expectStatus == 1) ?
+                    <div className='badge badge-outline badge-lg badge-error'>
+                      &darr; baisse
+                    </div>
+                  :
+                    <div className='badge badge-outline badge-lg badge-success'>
+                      &uarr; hausse
+                    </div>
+                  }
+                </div>
+              </>
             }
             { status === "canBet" && 
               <>
