@@ -55,6 +55,20 @@ export function useCryptoBet() {
     watch: true,
   });
 
+  const betBalanceEth = useContractRead({
+    address: import.meta.env.VITE_CRYPTOBET_ADDR,
+    abi: artifact.abi,
+    functionName: 'currentBetBalance',
+    watch: true,
+  });
+
+  const betBalanceEdft = useContractRead({
+    address: import.meta.env.VITE_CRYPTOBET_ADDR,
+    abi: artifact.abi,
+    functionName: 'currentBetBalanceErc20',
+    watch: true,
+  });
+
   // -------------------------------------------------------- EVENTS LISTENERS
 
   useContractEvent({
@@ -229,6 +243,8 @@ export function useCryptoBet() {
     userBet,
     userResult,
     currentPriceFeed,
+    betBalanceEth,
+    betBalanceEdft,
     handleNextRound,
     handleRegisterBet,
     getLastRound,
