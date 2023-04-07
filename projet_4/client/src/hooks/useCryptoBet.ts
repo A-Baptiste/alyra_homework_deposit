@@ -223,6 +223,17 @@ export function useCryptoBet() {
     return response;
   };
 
+  const handleDrainFund = async (value: number) => {
+    const bigValue = BigInt(value) * BigInt(1000000000000000000);
+    console.log('DRAIN');
+    let response;
+    if (cryptoBet) {
+      // response = await cryptoBet.drainTheFund(ethers.BigNumber.from(value * Math.pow(10, 18)));
+      response = await cryptoBet.drainTheFund(bigValue);
+    }
+    return response;
+  };
+
   // -------------------------------------------------------- FUNCTIONS
 
   // trigger functions
@@ -250,6 +261,7 @@ export function useCryptoBet() {
     getLastRound,
     handleClaimReward,
     handleMintEdft,
+    handleDrainFund,
     bettersFromEvt
   }
 };

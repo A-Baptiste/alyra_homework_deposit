@@ -1,9 +1,21 @@
+import { useState } from 'react';
 import { useCryptoBet } from '../hooks/useCryptoBet';
+import { toast } from 'react-toastify';
 
 function OwnerButtons() {
-  const { handleNextRound, contractBalance, userStatus } = useCryptoBet();
+  const { handleNextRound, contractBalance, userStatus, handleDrainFund } = useCryptoBet();
 
   console.log("contractBalance", contractBalance);
+  const [inputValue, setInputValue] = useState<number>();
+
+  const handleDrainFundCard = async (value: number) => {
+    try {
+      await handleDrainFund(value);
+      toast.success("Valeur extraite !");
+    } catch(err) {
+      console.log("error", err);
+    }
+  };
 
   return (
     <div className="flex justify-center items-center flex-col bg-[#2F2C2C] gap-3">
@@ -26,12 +38,16 @@ function OwnerButtons() {
             <input
               className='input input-bordered input-primary input-sm'
               type="number"
-              placeholder='00,0 ETH'
+              placeholder='en ETH'
+              value={inputValue}
+              onChange={(e) => setInputValue(parseInt(e.currentTarget.value))}
             />
             <button
               className="btn btn-primary btn-sm"
-              onClick={() => console.log("click")}
-            >Transférer</button>
+              disabled={inputValue ? false : true}
+              //@ts-ignore
+              onClick={() => handleDrainFundCard(inputValue)}
+            >Extraire</button>
           </div>
           <button
             className="btn btn-error btn-sm mb-3 w-52"
