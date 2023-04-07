@@ -5,6 +5,7 @@ import OwnerButtons from './components/OwnerButtons';
 import BetCard from './components/BetCards';
 import SwitchMoney from './components/SwitchMoney';
 import { ToastContainer } from 'react-toastify';
+import BetBalances from './components/BetBalances';
 
 function App() {
   const [useToken, setUseToken] = useState<boolean>(false);
@@ -15,6 +16,7 @@ function App() {
      <Timer />
      <SwitchMoney changeUseToken={setUseToken}/>
      <BetCard useToken={useToken} />
+     <BetBalances />
      <OwnerButtons />
      <ToastContainer
         position="bottom-right"
