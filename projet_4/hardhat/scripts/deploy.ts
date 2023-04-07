@@ -8,7 +8,7 @@ async function main() {
 
   await cryptoBet.deployed();
 
-  console.log(`Voting deployed to ${cryptoBet.address}`);
+  console.log(`CryptoBet deployed to ${cryptoBet.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

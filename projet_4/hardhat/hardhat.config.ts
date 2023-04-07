@@ -11,12 +11,11 @@ const config: HardhatUserConfig = {
         url: process.env.SEPOLIA_RPC_URL
       }
     },
-    // kovan: {
-    //   url: process.env.KOVAN_RPC_URL,
-    //   accounts: {
-    //     mnemonic: process.env.MNEMONIC
-    //   }
-    // }
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL,
+      //@ts-ignore
+      accounts: [process.env.SEPOLIA_PRIVATE_KEY]
+    }
   },
   solidity: "0.8.18",
 };
