@@ -67,7 +67,7 @@ function SwitchMoney({ changeUseToken }: Props) {
       </div>
       
       <span className={`w-full transition ${(tab === 0 || !address) && "opacity-0"}`}>
-        <b className='text-primary'>{balance}</b> EDFT
+        <b className='text-primary'>{balance ? balance : "0"}</b> EDFT
       </span>
     </div>
   );
