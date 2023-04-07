@@ -160,7 +160,9 @@ export function useCryptoBet() {
   // -------------------------------------------------------- FUNCTIONS
 
   const getUserStatus = async () => {
-
+    console.log("test owner");
+    console.log(cryptoBetOwner);
+    console.log(address);
     if (cryptoBetOwner === address) {
       setUserStatus('owner');
     }
