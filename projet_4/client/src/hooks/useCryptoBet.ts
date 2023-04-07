@@ -163,8 +163,10 @@ export function useCryptoBet() {
     console.log("test owner");
     console.log(cryptoBetOwner);
     console.log(address);
-    if (cryptoBetOwner === address) {
+    if (address && (cryptoBetOwner === address)) {
       setUserStatus('owner');
+    } else {
+      setUserStatus('guest');
     }
   };
 
