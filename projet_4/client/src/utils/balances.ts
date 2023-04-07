@@ -2,6 +2,7 @@ import { BigNumber } from "ethers";
 
 export function getStringBalanceFromBigNumber(balance: any) {
   const strBalance = balance.toString();
+  if(strBalance === "0") { return 0 }
   const truncBalance = strBalance.slice(0, strBalance.length - 15)
   return parseInt(truncBalance) / 1000;
 }

@@ -35,7 +35,7 @@ function SwitchMoney({ changeUseToken }: Props) {
     await response.wait();
     console.log("response mint ", response);
     toast.success(`Vos 30 EDFT on été envoyés !`);
-    setBalance(balance + 30);
+    setBalance(balance ? balance + 30 : 30);
   };
 
   return (
