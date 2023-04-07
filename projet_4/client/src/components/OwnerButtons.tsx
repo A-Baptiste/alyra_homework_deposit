@@ -17,7 +17,7 @@ function OwnerButtons() {
             <span>Balance du contrat</span>
             <div>
             <b className='text-primary'>
-              {contractBalance?.formatted}
+              {contractBalance ? contractBalance.formatted : "0"}
             </b>
             &nbsp;ETH
             </div>

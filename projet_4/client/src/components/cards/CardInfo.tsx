@@ -8,7 +8,7 @@ interface Props {
 
 function CardInfo({ useToken }: Props) {
   const { currentPriceFeed } = useCryptoBet();
-  const betValue = "10";
+  const betValue = "1";
 
   return (
     <div className="card w-96 shadow-xl bg-[#2F2C2C]">
@@ -26,7 +26,7 @@ function CardInfo({ useToken }: Props) {
               {useToken ?
                 <div className='text-primary'>{10} EDFT</div>
               :
-                <div className='text-primary'>{betValue} Wei</div>
+                <div className='text-primary'>{betValue} ETH</div>
               }
             </div>
           </div>
