@@ -115,7 +115,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   modifier mustHaveLowToken() {
     require(
-          balanceOf(msg.sender) < 30,
+          balanceOf(msg.sender) < 30*10**18,
           unicode"you have too much EDFT"
       );
       _;
