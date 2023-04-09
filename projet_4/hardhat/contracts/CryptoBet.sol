@@ -10,7 +10,7 @@ import "../node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /**
 * @title CryptoBet
 * @author Baptiste ALCHAIR
-* @notice Bet on crypto currency rate, with eth or custom erc20
+* @notice Bet on crypto currency rate, with eth or custom erc20 (EDFT)
 */
 contract CryptoBet is Ownable, ERC20 {
   // --- VARIABLES ---
@@ -42,8 +42,7 @@ contract CryptoBet is Ownable, ERC20 {
   uint256 public currentBetBalanceErc20;
 
   int256 public currentPriceFeed;
-  uint256 salesMargin = 90; // means 10% margin
-  bool transferPending; // avoid re-entrency
+  bool _transferPending; // avoid re-entrency
 
   AggregatorV3Interface internal priceFeed;
 
@@ -92,6 +91,15 @@ contract CryptoBet is Ownable, ERC20 {
           userBets[msg.sender].betStatus == BetStatus(uint256(2)) ||
           userBets[msg.sender].betStatus == BetStatus(uint256(3)),
           unicode"wait till your bet has finished"
+      );
+      _;
+  }
+
+  // avoid re-entrency
+  modifier mustNotTransferPending() {
+     require(
+          _transferPending == false,
+          unicode"a tranfer is pending, retry later"
       );
       _;
   }
@@ -149,7 +157,7 @@ contract CryptoBet is Ownable, ERC20 {
     uint256 winnersErc20;
     uint256 loosers;
     uint256 loosersErc20;
-    Expectations answerStatus = getRoundAnswer(newPriceFeed);
+    Expectations answerStatus = _getRoundAnswer(newPriceFeed);
 
     // update price feed
     currentPriceFeed = newPriceFeed;
@@ -176,7 +184,7 @@ contract CryptoBet is Ownable, ERC20 {
       }
     }
 
-    computeRewards(winners, winnersErc20);
+    _computeRewards(winners, winnersErc20);
     emit evt_nextRound(
       winners,
       winnersErc20,
@@ -195,7 +203,7 @@ contract CryptoBet is Ownable, ERC20 {
   * @param _newPriceFeed new price feed
   * @return Expectations enum (1 or 2)
   */
-  function getRoundAnswer(int256 _newPriceFeed) private view returns(Expectations) {
+  function _getRoundAnswer(int256 _newPriceFeed) private view returns(Expectations) {
     if (_newPriceFeed > currentPriceFeed) {
       return Expectations(uint256(2));
     }
@@ -207,7 +215,7 @@ contract CryptoBet is Ownable, ERC20 {
   * @param win number of winner
   * @param winErc20 number of winner using EDFT
   */
-  function computeRewards(uint256 win, uint256 winErc20) private {
+  function _computeRewards(uint256 win, uint256 winErc20) private {
     for (uint256 i = 0; i < betters.length; i = i + 1) {
       if (userBets[betters[i]].betStatus == BetStatus(uint256(3))) {
         if (userBets[betters[i]].token == true) {
@@ -255,26 +263,26 @@ contract CryptoBet is Ownable, ERC20 {
   /**
   * @dev claim a reward if sender is a winner
   */
-  function claimBet() external mustBetEnded{
-    if (userBets[msg.sender].betStatus == BetStatus(uint256(3)) && transferPending == false) {
-      transferPending = true;
+  function claimBet() external mustBetEnded mustNotTransferPending {
+    if (userBets[msg.sender].betStatus == BetStatus(uint256(3))) {
       if (userBets[msg.sender].token == true) {
         _mint(msg.sender, userBets[msg.sender].balance*10**18);
       } else {
-        uint256 rewardValue = ( userBets[msg.sender].balance * salesMargin ) / 100;
+        uint256 rewardValue = ( userBets[msg.sender].balance * 90 ) / 100; // 10% margin
+        _transferPending = true;
         (bool success, ) = msg.sender.call{value: rewardValue}("");
+        _transferPending = false;
         require (success, unicode"Reward transfer failed, please retry");
       }
     }
-    resetUserBet(msg.sender);
-    transferPending = false;
+    _resetUserBet(msg.sender);
   }
 
   /**
   * @dev reset bet user data
   * @param _userToRemove user's address to remove
   */
-  function resetUserBet(address _userToRemove) private {
+  function _resetUserBet(address _userToRemove) private {
     delete userBets[_userToRemove].betValue;
     delete userBets[_userToRemove].expectStatus;
     delete userBets[_userToRemove].balance;
@@ -291,7 +299,7 @@ contract CryptoBet is Ownable, ERC20 {
 
   /**
   * @dev drain fund of the smart contract
-  * @param _value value to drain
+  * @param _value value to extract
   */
   function drainTheFund(uint256 _value) external onlyOwner {
     (bool success, ) = msg.sender.call{value: _value}("");
