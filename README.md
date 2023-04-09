@@ -87,3 +87,6 @@ Lancer les test :
 ```
 truffle test
 ``` 
+
+### Projet Final : EasyDapp application décentralisée de pari
+```📁 Projet_4```
