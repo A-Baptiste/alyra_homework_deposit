@@ -1,8 +1,8 @@
-# Sample Hardhat Project
+# CryptoBet Hardhat Project
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+Ce projet est une prtie du projet final, il regroupe le smart contract de pari ainsi que ses tests associés.
 
-Try running some of the following tasks:
+Commandes utilisables:
 
 ```shell
 npx hardhat help
