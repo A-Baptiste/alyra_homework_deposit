@@ -5,9 +5,16 @@
 
 ## Description
 
-> EasyDapp est une application décentralisée qui as pour vocation à aider les néophites à comprendre les applications possible à la cryptomonaie et la blockchain.
-> Pour l'instant EasyDapp permet seulement de parier sur le cours du ETH / USD et de récolter une recompense en fonction des utilisateur ayant gagné ou perdu leurs pari.
-> Il est possible de jouer un un token dédieé, l'EDFT, qui permet de jouer sans perdre d'argent car celui ci est obtenable gratuitement.
+*EasyDapp est une application décentralisée qui as pour vocation à aider les néophites à comprendre les applications possible à la cryptomonaie et la blockchain.*
+*Pour l'instant EasyDapp permet seulement de parier sur le cours du ETH / USD et de récolter une recompense en fonction des utilisateur ayant gagné ou perdu leurs pari.*
+*Il est possible de jouer un un token dédieé, l'EDFT, qui permet de jouer sans perdre d'argent car celui ci est obtenable gratuitement.*
+
+## CRON
+
+*Pour fonctionner EasyDapp utilise un CRON qui viens trigger le round suivant toutes les 6 heures (8h / 14h / 20h / 2h), à ce moment les pari sont calculées et les gagnants peuvent réclammer leurs recompense.*
+*Ce CRON est fait avec [l'outil d'automation de ChainLink](https://automation.chain.link/), il suffit de rentrer l'adresse / abi du contract et avec un peut de configuration le CRON est capable de se déclencher automatiquement.*
+*En raison du cout en ETH de test, il est tres probable que le CRON soit éteint au moment où vous lisez ces lignes*
+
 
 ## Utilisation
 
