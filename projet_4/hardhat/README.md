@@ -1,4 +1,4 @@
-# CryptoBet Hardhat Project
+# Projet Hardhat CryptoBet
 
 Ce projet est une prtie du projet final, il regroupe le smart contract de pari ainsi que ses tests associés.
 
