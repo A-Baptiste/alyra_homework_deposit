@@ -16,6 +16,8 @@
 *Ce CRON est fait avec [l'outil d'automation de ChainLink](https://automation.chain.link/), il suffit de rentrer l'adresse / abi du contract et avec un peut de configuration le CRON est capable de se déclencher automatiquement.*
 *En raison du cout en ETH de test, il est tres probable que le CRON soit éteint au moment où vous lisez ces lignes*
 
+*EDIT: J'ai relancé le cron pour la démo vous pourrez le voir à cet url [crypto bet cron](https://automation.chain.link/sepolia/67812545495137626883525232628968858873229990852337192912216564562955724960730)*
+
 
 ## Utilisation
 
