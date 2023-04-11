@@ -2,6 +2,7 @@
 
 - Front déployé : [EasyDapp](https://alyra-homework-deposit.vercel.app/)
 - Vidéo démonstration : [Démo EasyDapp](https://drive.google.com/file/d/1mUS5Oxzx2nC8-nO-Lh2DpxRU8uwn6mtM/view?usp=sharing)
+- Adresse contract deployé (Sepolia) : `0x98CFCCEb5B67242a1D140bC23497e658370ED162`
 
 ## Description
 
@@ -59,6 +60,20 @@ npm install
 laner le serveur local
 ```
 npm run dev
+```
+## Template variables d'environnement
+> Créez un fichier `.env` dans les dossiers suivants et ajoutez y vos données.
+
+Dans le dossier `📁 client`
+```
+VITE_CRYPTOBET_ADDR=[ADDRESSE DU CONTRACT]
+```
+
+Dans le dossier `📁 hardhat`
+```
+SEPOLIA_RPC_URL=[VOTRE URL DE RPC SEPOLIA]
+SEPOLIA_ORACLE_ADDRESS=0x694AA1769357215DE4FAC081bf1f309aDC325306
+SEPOLIA_PRIVATE_KEY=[CLE PRIVEE DU FUTUR OWNER DU CONTRACT]
 ```
 
 ## Stack technique
